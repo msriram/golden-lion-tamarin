@@ -1,12 +1,12 @@
-import {PATCHES,FUNDRAISERS,SERVICES,createInitialState,applyTool,describeLink,activeLink,matureLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,plantingSeason,createInitialState,applyTool,describeLink,activeLink,matureLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
 import {terrainArtwork} from './terrain.js';
 
-const storageKey='tamarinTrailsCampaignV3';
+const storageKey='tamarinTrailsCampaignV4';
 const map=document.querySelector('[data-game-map]');
 const dialog=document.querySelector('[data-report-dialog]');
 let state=load()||createInitialState();
 let tool='inspect',timer=null,terminalShown=false;
-function load(){try{const saved=JSON.parse(localStorage.getItem(storageKey));return saved?.version===3?saved:null;}catch{return null;}}
+function load(){try{const saved=JSON.parse(localStorage.getItem(storageKey));return saved?.version===4?saved:null;}catch{return null;}}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{message('Browser storage is full. This session can continue, but could not be saved.','error');}}
 function message(copy,tone=''){const target=document.querySelector('[data-game-message]');target.textContent=copy;target.className=`game-message ${tone}`;}
 const number=value=>Math.round(value).toLocaleString();
@@ -41,10 +41,21 @@ function renderMap(){
 function renderFinance(metrics){
   document.querySelector('[data-finance]').innerHTML=`<div><span>Weekly bills</span><strong>${number(metrics.cost)} FC</strong></div><div><span>Recurring support</span><strong>+${number(metrics.support)} FC</strong></div><div><span>Net weekly burn</span><strong>${number(metrics.burn)} FC</strong></div><div class="${metrics.runway<20?'critical':''}"><span>Cash runway</span><strong>${metrics.runway===Infinity?'Covered':`${metrics.runway} weeks`}</strong></div><div><span>Community trust</span><strong>${Math.floor(state.awareness)}/100</strong></div><div><span>Monitoring evidence</span><strong>${Math.floor(state.evidence)}/100</strong></div>`;
   document.querySelector('[data-risk]').textContent=state.shortfallWeeks?`Unpaid operations: ${state.shortfallWeeks}/26 weeks. Bridge condition and habitat are deteriorating. Raise funds immediately.`:metrics.runway<20?`Only ${metrics.runway} weeks of cash. Upcoming grants are not cash in hand. Delay expansion or fundraise now.`:`${state.decliningBalanceYears}/10 declining years. Maintain a cash reserve for storms and grant delays.`;
-  for(const button of document.querySelectorAll('[data-service]')){button.setAttribute('aria-pressed',String(state.services[button.dataset.service]));button.disabled=state.status!=='playing';}
+  for(const button of document.querySelectorAll('[data-service]')){
+    const name=button.dataset.service,config=PROGRAMS[name],timer=state.programTimers[name],active=state.services[name];
+    const rest=Math.max(0,(timer?.readyAt||0)-state.totalWeeks),commit=Math.max(0,(timer?.commitUntil||0)-state.totalWeeks);
+    button.setAttribute('aria-pressed',String(active));button.disabled=state.status!=='playing'||(!active&&rest>0)||(active&&commit>0);
+    const status=active?`Running: ${timer.endsAt-state.totalWeeks} weeks left${commit?`; committed ${commit} more`:'; pause available'}`:rest?`Turnaround: ${rest} weeks left`:`Start: ${config.setup} FC setup + ${SERVICES[name]}/week`;
+    button.innerHTML=`${config.label}<small>${status}</small><small>${config.limit}</small>`;
+  }
   const current=state.fundraisers.find(entry=>!entry.completed);
-  document.querySelector('[data-campaign]').textContent=current?`${FUNDRAISERS[current.id].label}: ${Math.max(0,current.due-state.totalWeeks)} weeks remaining.`:'Fundraising team available. One campaign at a time.';
-  for(const button of document.querySelectorAll('[data-fundraiser]')){const id=button.dataset.fundraiser,config=FUNDRAISERS[id];const wait=Math.max(0,(state.cooldowns[id]||0)-state.totalWeeks);button.disabled=state.status!=='playing'||!!current||wait>0;button.querySelector('small').textContent=wait?`Audience cooldown: ${wait} weeks`:`${config.cost} FC · ${config.duration} weeks · ${id==='grant'?'9,000 FC if eligible':`base ${config.payout} FC`}`;}
+  document.querySelector('[data-campaign]').textContent=current?current.firstPaid?`Grant: first half received. Final half requires 13 weeks and four new paid monitoring weeks (${Math.min(4,state.reportWork-current.reportBaseline)}/4 complete).`:`${FUNDRAISERS[current.id].label}: ${Math.max(0,current.due-state.totalWeeks)} weeks remaining.`:'Fundraising team available. One campaign at a time.';
+  for(const button of document.querySelectorAll('[data-fundraiser]')){
+    const id=button.dataset.fundraiser,config=FUNDRAISERS[id],wait=Math.max(0,(state.cooldowns[id]||0)-state.totalWeeks);
+    button.disabled=state.status!=='playing'||!!current||wait>0||(id==='appeal'&&state.balanceFC>=1000&&state.shortfallWeeks===0);
+    button.querySelector('small').textContent=`${wait?`Cooldown: ${wait} weeks remaining. `:''}${config.cost} FC · ${config.duration} weeks · ${id==='grant'?'4,500 + 4,500 FC':`base ${config.payout} FC`} · ${config.cooldown}-week rest after completion`;
+  }
+  document.querySelector('[data-season]').textContent=plantingSeason(state)?`Wet-season planting window: ${22-state.totalWeeks%52} weeks remaining (October–February).`:`Dry season: planting opens in ${52-state.totalWeeks%52} weeks. Maintain existing seedlings now.`;
   document.querySelector('[data-history]').innerHTML=state.annualReports.slice(-5).reverse().map(report=>`<tr><td>${report.year}</td><td>${number(report.income)}</td><td>${number(report.expenses)}</td><td>${number(report.closing)}</td><td>${report.sustainable?'Stable':'Rebuilding'}</td></tr>`).join('')||'<tr><td colspan="5">Your first report arrives after 52 weeks.</td></tr>';
 }
 function render(){

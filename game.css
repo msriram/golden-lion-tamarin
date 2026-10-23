@@ -680,6 +680,8 @@
 .program-button { display:block; width:100%; margin-top:.5rem; padding:.7rem; border:1px solid var(--forest-900); color:var(--forest-900); background:transparent; text-align:left; cursor:pointer; font-size:.8rem; font-weight:600; }
 .program-button small { display:block; font-weight:400; margin-top:.25rem; }
 .program-button[aria-pressed="true"] { background:#254b3a; color:#fff8e7; border-left:7px solid #ecb84e; }
+.program-button:disabled { cursor:default; }
+.program-button:disabled:not([aria-pressed="true"]) { opacity:.65; }
 .finance-panel { margin-top:1.5rem; padding:1.3rem; background:var(--paper); border-top:3px solid var(--forest-800); }
 .finance-panel h2 { font-size:1.4rem; }
 .finance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.7rem; }

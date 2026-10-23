@@ -26,6 +26,7 @@ test('bridge construction, delayed planting, and route-specific unlocks',()=>{
   state=applyTool(state,'bridge','ab').state;
   assert.equal(applyTool(state,'restore','ab').ok,false);
   state=advance(state,16);
+  state.totalWeeks=52;
   assert.equal(applyTool(state,'restore','ab').ok,true);
   assert.equal(applyTool(state,'restore','ad').ok,false);
   assert.equal(reachable(state,'a').size,2);
@@ -76,4 +77,38 @@ test('campaign remains winnable with reserve management across three seeds',()=>
     const state=runCampaign(seed,'expert');assert.equal(state.status,'won',`seed ${seed}`);
     assert.ok(state.totalWeeks>=520);assert.equal(state.sustainableYears,3);
   }
+});
+
+test('program commitment and completion cooldown block rapid toggling',()=>{
+  let state=toggleService(createInitialState(),'outreach').state;
+  assert.equal(toggleService(state,'outreach').ok,false);
+  state=advance(state,12);assert.equal(state.services.outreach,false);
+  assert.equal(toggleService(state,'outreach').ok,false);
+  state=advance(state,7);assert.equal(toggleService(state,'outreach').ok,false);
+  state=advance(state,1);assert.equal(toggleService(state,'outreach').ok,true);
+});
+test('fundraising cooldown begins after the payout, not the start',()=>{
+  let state=startFundraiser(createInitialState(),'presentation').state;
+  state=advance(state,33);assert.equal(startFundraiser(state,'presentation').ok,false);
+  state=advance(state,1);assert.equal(startFundraiser(state,'presentation').ok,true);
+});
+test('grant final installment waits for new monitoring and is paid once',()=>{
+  let state=createInitialState();state.evidence=25;state.awareness=80;
+  state=startFundraiser(state,'grant').state;state=advance(state,16);
+  assert.equal(state.fundraisers[0].firstPaid,true);
+  assert.equal(state.ledger.filter(entry=>entry.category==='Evidence grant'&&entry.amount>0)[0].amount,4500);
+  state=advance(state,15);assert.equal(state.fundraisers[0].completed,false);
+  state=toggleService(state,'monitoring').state;state=advance(state,5);
+  assert.equal(state.fundraisers[0].completed,true);
+  state=advance(state,2);assert.equal(state.ledger.filter(entry=>entry.category==='Evidence grant final installment').length,1);
+});
+test('planting has a wet-season window',()=>{
+  let state=createInitialState();state.links[0].agreement=true;state.links[0].built=true;state.totalWeeks=30;
+  assert.equal(applyTool(state,'restore','ab').ok,false);
+  state.totalWeeks=52;assert.equal(applyTool(state,'restore','ab').ok,true);
+});
+test('nursery care has capacity for only two areas',()=>{
+  let state=createInitialState();state.links.slice(0,3).forEach(link=>{link.planted=true;link.survival=50;});
+  state=toggleService(state,'nursery').state;state=advance(state,1);
+  assert.equal(state.links.filter(link=>link.planted&&link.survival>50).length,2);
 });

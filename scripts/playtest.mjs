@@ -3,10 +3,10 @@ import {createInitialState,simulateOneWeek,startFundraiser,applyTool,toggleServi
 export function runCampaign(seed=73,policy='careful') {
   let state=createInitialState(seed);
   const targets=['ab','ad','be','ef'];
-  for(let week=0;week<1040&&state.status==='playing';week+=1){
+  for(let week=0;week<1560&&state.status==='playing';week+=1){
     if(policy==='careful'||policy==='expert'){
       if(policy==='expert'){
-        const desired={outreach:state.awareness<(state.services.outreach?98:78),monitoring:state.evidence<25||state.crossingCount<24,nursery:state.links.some(link=>link.planted&&link.survival<(state.services.nursery?96:82))};
+        const desired={outreach:state.awareness<(state.services.outreach?98:88),monitoring:state.evidence<25||state.crossingCount<24||state.fundraisers.some(entry=>entry.id==='grant'&&!entry.completed),nursery:state.links.some(link=>link.planted&&link.survival<(state.services.nursery?96:82))};
         for(const [name,enabled] of Object.entries(desired))if(state.services[name]!==enabled)state=toggleService(state,name).state;
       }else{
         for(const name of ['outreach','monitoring'])if(!state.services[name])state=toggleService(state,name).state;

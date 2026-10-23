@@ -18,7 +18,9 @@ npm run check
 
 The project uses no third-party runtime dependencies. GitHub Pages serves the files directly from the repository through the included workflow.
 
-The conservation campaign uses version 3 local saves under `tamarinTrailsCampaignV3`. Earlier saves remain separate. Six patches and seven candidate routes support several network choices. Construction crews, paid outreach, monitoring, nurseries, delayed grants, audience cooldowns, weekly operations, bridge condition, seedling survival, storms, and dry seasons interact. All costs and biological rates are fictional game balance values.
+The conservation campaign uses version 4 local saves under `tamarinTrailsCampaignV4`. Earlier saves remain separate. Six patches and seven candidate routes support several network choices. Construction crews, paid outreach, monitoring, nurseries, delayed grants, audience cooldowns, weekly operations, bridge condition, seedling survival, storms, and dry seasons interact. All costs and biological rates are fictional game balance values.
+
+Funding cooldowns start at completion, rather than at application. Grants pay half at approval and half after a 13-week reporting period and four new paid monitoring weeks. Program setup costs, fixed runs, minimum commitments, and recovery periods are configured in `PROGRAMS`. Nursery care prioritizes the two lowest-survival planting areas. Planting is restricted to the first 22 weeks of each simulated year, which begins in October. These mechanics draw on the sources listed on the Sources page; exact credits, staffing limits, turnaround times, and equal grant installments are scenario choices rather than published AMLD or CEPF operating rules.
 
 Complete a route's bridge to unlock its planting. Four years of funded growth and at least 60% survival produce mature cover. Win by sustaining all ecological and financial targets for three annual reviews from Year 8 onward. Loss conditions are 26 consecutive unpaid weeks, ten consecutive declining year-end balances, or disappearance of all local families. End reports can be closed or reset.
 

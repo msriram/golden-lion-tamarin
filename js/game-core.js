@@ -24,6 +24,12 @@ export const FUNDRAISERS = {
   appeal:{ label:'Emergency appeal', cost:0, duration:6, payout:650, cooldown:104 }
 };
 export const SERVICES = { outreach:45, monitoring:32, nursery:40 };
+export const PROGRAMS = {
+  outreach: { label:'Community outreach', setup:100, duration:12, cooldown:8, commitment:6, limit:'12-week campaign; 8 weeks for follow-up and community availability.' },
+  monitoring: { label:'Field monitoring', setup:80, duration:13, cooldown:4, commitment:8, limit:'13-week survey; 4 weeks for equipment and data preparation.' },
+  nursery: { label:'Nursery care', setup:120, duration:26, cooldown:4, commitment:13, limit:'26-week contract; capacity for two planting areas; 4-week restocking.' }
+};
+export function plantingSeason(state) { return state.totalWeeks % 52 < 22; }
 const clone = state => structuredClone(state);
 const bound = value => Math.max(0,Math.min(100,value));
 function event(state,message,tone='note') {
@@ -47,12 +53,12 @@ function pay(state,cost,category) {
 }
 export function createInitialState(seed=73) {
   return {
-    version:3,rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
+    version:4,rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
     balanceFC:12000,previousYearEndBalanceFC:12000,yearlyIncomeFC:0,yearlyExpensesFC:0,
     decliningBalanceYears:0,shortfallWeeks:0,sustainableYears:0,awareness:38,evidence:0,
     patches:PATCHES.map(patch=>({...patch,health:78})),
     links:LINKS.map(link=>({...link,agreement:false,agreementDue:null,bridgeDue:null,built:false,condition:100,planted:false,age:0,survival:100,crossings:0})),
-    services:{outreach:false,monitoring:false,nursery:false},fundraisers:[],cooldowns:{},
+    services:{outreach:false,monitoring:false,nursery:false},programTimers:{},reportWork:0,fundraisers:[],cooldowns:{},
     annualReports:[],ledger:[],events:[],eventCounter:0,crossingCount:0,monkeyCount:24,
     wildlife:{canopy:100,ground:100,birds:100,amphibians:100,pollinators:100}
   };
@@ -109,6 +115,7 @@ export function applyTool(oldState,tool,id) {
   } else if(tool==='restore') {
     if(!activeLink(link)) return result(oldState,false,'Complete and maintain this bridge before adding tree cover.');
     if(link.planted) return result(oldState,false,'This corridor is already planted.');
+    if(!plantingSeason(state)) return result(oldState,false,`Plant in the next wet season, in ${52-state.totalWeeks%52} weeks. The campaign starts in October.`);
     if(!pay(state,1200,'Native planting')) return result(oldState,false,'Need 1,200 FC for planting.');
     link.planted=true;
   } else if(tool==='repair') {
@@ -121,19 +128,31 @@ export function applyTool(oldState,tool,id) {
 }
 export function toggleService(oldState,name) {
   if(!(name in SERVICES)||oldState.status!=='playing')return result(oldState,false,'Program unavailable.');
-  const state=clone(oldState);state.services[name]=!state.services[name];
-  event(state,`${name} ${state.services[name]?'funded':'paused'} (${SERVICES[name]} FC/week).`,'community');
-  return result(state,true,`${name} ${state.services[name]?'enabled':'paused'}.`);
+  const config=PROGRAMS[name],timer=oldState.programTimers[name];
+  if(oldState.services[name]&&oldState.totalWeeks<timer.commitUntil)return result(oldState,false,`Contract committed for ${timer.commitUntil-oldState.totalWeeks} more weeks.`);
+  if(!oldState.services[name]&&timer?.readyAt>oldState.totalWeeks)return result(oldState,false,`${config.label} available again in ${timer.readyAt-oldState.totalWeeks} weeks.`);
+  const state=clone(oldState);
+  if(state.services[name]){
+    state.services[name]=false;state.programTimers[name].readyAt=state.totalWeeks+config.cooldown;
+    event(state,`${config.label} paused; ${config.cooldown}-week turnaround.`,'community');
+    return result(state,true,`${config.label} paused. Its team is in turnaround.`);
+  }
+  if(!pay(state,config.setup,`${config.label} mobilization`))return result(oldState,false,`Need ${config.setup} FC to mobilize ${config.label}.`);
+  state.services[name]=true;
+  state.programTimers[name]={endsAt:state.totalWeeks+config.duration,commitUntil:state.totalWeeks+config.commitment,readyAt:0};
+  event(state,`${config.label} starts a ${config.duration}-week run. ${SERVICES[name]} FC/week; then ${config.cooldown} weeks turnaround.`,'community');
+  return result(state,true,`${config.label} running. Minimum commitment ${config.commitment} weeks.`);
 }
 export function startFundraiser(oldState,id) {
   const config=FUNDRAISERS[id];
   if(!config||oldState.status!=='playing')return result(oldState,false,'Campaign unavailable.');
   if(oldState.fundraisers.some(entry=>!entry.completed))return result(oldState,false,'The fundraising team is busy.');
   if((oldState.cooldowns[id]||0)>oldState.totalWeeks)return result(oldState,false,`Available again in ${oldState.cooldowns[id]-oldState.totalWeeks} weeks.`);
+  if(id==='appeal'&&oldState.balanceFC>=1000&&oldState.shortfallWeeks===0)return result(oldState,false,'Emergency appeals are reserved for a cash crisis below 1,000 FC.');
   if(id==='grant'&&(oldState.evidence<20||oldState.awareness<45))return result(oldState,false,'Grant requires 20 monitoring evidence and 45 community trust.');
   const state=clone(oldState);
   if(!pay(state,config.cost,config.label))return result(oldState,false,`Need ${config.cost} FC to prepare this campaign.`);
-  state.cooldowns[id]=state.totalWeeks+config.cooldown;
+  state.cooldowns[id]=state.totalWeeks+config.duration+config.cooldown;
   state.fundraisers.push({id,due:state.totalWeeks+config.duration,completed:false});
   event(state,`${config.label} underway. Results in ${config.duration} weeks.`,'community');
   return result(state,true,`${config.label} started. Bills continue during preparation.`);
@@ -165,9 +184,18 @@ export function simulateOneWeek(oldState) {
   const state=clone(oldState);state.totalWeeks+=1;
   for(const campaign of state.fundraisers) {
     if(campaign.completed||campaign.due>state.totalWeeks)continue;
-    campaign.completed=true;const config=FUNDRAISERS[campaign.id];
+    const config=FUNDRAISERS[campaign.id];
+    if(campaign.id==='grant'&&campaign.firstPaid){
+      if(state.reportWork-campaign.reportBaseline<4){campaign.due=state.totalWeeks+1;continue;}
+      transaction(state,config.payout/2,'Evidence grant final installment');campaign.completed=true;
+      state.cooldowns.grant=state.totalWeeks+config.cooldown;
+      event(state,'Grant report accepted. Final installment received; renewal cooldown begins.','income');continue;
+    }
+    campaign.completed=true;
     const approved=campaign.id!=='grant'||(state.evidence>=20&&state.awareness>=45);
-    const payout=approved?Math.round(config.payout*(campaign.id==='grant'||campaign.id==='appeal'?1:(.7+state.awareness/200)*(.85+random(state)*.3))):0;
+    const payout=approved?Math.round(config.payout*(campaign.id==='grant' ? .5 : campaign.id==='appeal'?1:(.7+state.awareness/200)*(.85+random(state)*.3))):0;
+    if(campaign.id==='grant'&&approved){campaign.firstPaid=true;campaign.completed=false;campaign.reportBaseline=state.reportWork;campaign.due=state.totalWeeks+13;}
+    else state.cooldowns[campaign.id]=state.totalWeeks+config.cooldown;
     transaction(state,payout,config.label);
     event(state,`${config.label}: ${payout?`+${payout} FC received`:'declined: eligibility fell during review'}.`,payout?'income':'warning');
   }
@@ -175,20 +203,21 @@ export function simulateOneWeek(oldState) {
   const funded=pay(state,weeklyCost(state),'Weekly operations');
   state.shortfallWeeks=funded?0:state.shortfallWeeks+1;
   if(!funded&&state.balanceFC>0)transaction(state,-state.balanceFC,'Partial operations payment');
-  state.awareness=bound(state.awareness+(funded && state.services.outreach ? .65 : -.3));
-  if(funded&&state.services.monitoring)state.evidence=Math.min(100,state.evidence+.5);
+  state.awareness=bound(state.awareness+(funded && state.services.outreach ? .95 : -.25));
+  if(funded&&state.services.monitoring){state.evidence=Math.min(100,state.evidence+.9);state.reportWork+=1;}
+  const nurseryAreas=state.services.nursery&&funded?state.links.filter(link=>link.planted).sort((first,second)=>first.survival-second.survival).slice(0,2):[];
   for(const link of state.links) {
     if(link.agreementDue&&link.agreementDue<=state.totalWeeks){link.agreement=true;link.agreementDue=null;event(state,`${link.name}: agreement signed.`,'community');}
     if(funded&&link.bridgeDue&&link.bridgeDue<=state.totalWeeks){link.bridgeDue=null;link.built=true;event(state,`${link.name}: bridge opened.`,'build');}
     if(link.built)link.condition=bound(link.condition-(funded ? .06 : 2.5));
-    if(link.planted){if(funded)link.age+=1;link.survival=bound(link.survival+(funded && state.services.nursery ? .25 : funded ? -.015 : -1.1));}
+    if(link.planted){if(funded)link.age+=1;link.survival=bound(link.survival+(nurseryAreas.includes(link) ? .35 : funded ? -.015 : -1.1));}
     if(activeLink(link)&&state.totalWeeks%13===0&&state.services.monitoring&&funded&&random(state)>.35){link.crossings+=1;state.crossingCount+=1;}
   }
   for(const patch of state.patches){const habitat=state.links.filter(link=>(link.from===patch.id||link.to===patch.id)&&matureLink(link)).length;patch.health=bound(patch.health+(funded ? habitat ? .14 : -.015 : -.7));}
   if(state.totalWeeks%78===0){
     const link=state.links[Math.floor(random(state)*state.links.length)],storm=random(state)>.5;
     if(storm&&link.built)link.condition=bound(link.condition-24);
-    if(!storm){for(const patch of state.patches)patch.health=bound(patch.health-5);if(link.planted)link.survival=bound(link.survival-(state.services.nursery&&funded?4:16));}
+    if(!storm){for(const patch of state.patches)patch.health=bound(patch.health-5);if(link.planted)link.survival=bound(link.survival-(nurseryAreas.includes(link)?4:16));}
     event(state,storm?`Storm near ${link.name}. Inspect bridge condition.`:'Dry season: stressed habitat and young plantings need care.','warning');
   }
   const metrics=getMetrics(state);state.monkeyCount=metrics.population;
@@ -196,6 +225,12 @@ export function simulateOneWeek(oldState) {
   if(state.totalWeeks%52===0)settleYear(state);
   if(state.shortfallWeeks>=26)state.status='lost-solvency';
   if(state.patches.every(patch=>patch.population===0))state.status='lost-extinction';
+  for(const [name,config] of Object.entries(PROGRAMS)){
+    if(state.services[name]&&state.programTimers[name].endsAt<=state.totalWeeks){
+      state.services[name]=false;state.programTimers[name].readyAt=state.totalWeeks+config.cooldown;
+      event(state,`${config.label} run finished. Team available in ${config.cooldown} weeks.`,'community');
+    }
+  }
   state.monkeyCount=state.patches.reduce((sum,patch)=>sum+patch.population,0);
   if(state.status!=='playing')state.paused=true;
   return state;
