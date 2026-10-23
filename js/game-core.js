@@ -47,7 +47,7 @@ export function createInitialState() {
   }
 
   return {
-    version: 1,
+    version: 2,
     totalWeeks: 0,
     paused: true,
     speed: 1,
@@ -68,7 +68,7 @@ export function createInitialState() {
     eventCounter: 2,
     events: [
       { id: '0-1', week: 0, message: 'Mission opened: reconnect the west and east forest patches.', tone: 'goal' },
-      { id: '0-0', week: 0, message: 'Start with the highlighted row. Two pasture tiles already have restoration permission.', tone: 'note' }
+      { id: '0-0', week: 0, message: 'Build both tree bridges first. Then secure permission and restore the three planting areas.', tone: 'note' }
     ]
   };
 }
@@ -115,6 +115,7 @@ export function applyTool(oldState, tool, tileId) {
   if (tool === 'inspect') return { state, ok: true, message: describeTile(tile) };
 
   if (tool === 'restore') {
+    if (state.bridge?.status !== 'ready') return { state: oldState, ok: false, message: 'Build and complete both tree bridges before adding tree cover.' };
     if (tile.kind !== 'pasture') return { state: oldState, ok: false, message: 'Planting is limited to suitable pasture tiles in this scenario.' };
     if (!tile.permission) return { state: oldState, ok: false, message: 'Permission first: negotiate a voluntary land agreement.' };
     if (tile.restoration) return { state: oldState, ok: false, message: 'This tile already has a restoration cohort.' };
@@ -136,9 +137,10 @@ export function applyTool(oldState, tool, tileId) {
 
   if (tool === 'bridge') {
     if (tile.kind !== 'road' || tile.row !== 3) return { state: oldState, ok: false, message: 'This scenario has one approved short crossing site in the highlighted row.' };
-    if (state.bridge) return { state: oldState, ok: false, message: 'The scenario already has a canopy crossing project.' };
+    if (state.bridge?.segments.some((segment) => segment.tileId === tileId)) return { state: oldState, ok: false, message: 'This tree bridge is already planned or built.' };
     if (!charge(state, TOOL_CONFIG.bridge.cost, 'Canopy crossing construction')) return { state: oldState, ok: false, message: 'Not enough Forest Credits.' };
-    state.bridge = { status: 'building', readyWeek: state.totalWeeks + 8, condition: 1, observedCrossings: 0 };
+    if (!state.bridge) state.bridge = { status: 'building', segments: [], condition: 1, observedCrossings: 0 };
+    state.bridge.segments.push({ tileId, readyWeek: state.totalWeeks + 8 });
     addEvent(state, 'Canopy crossing construction started. Building it does not guarantee wildlife use.', 'build');
     return { state, ok: true, message: 'Crossing under construction. Completion is expected in 8 simulated weeks.' };
   }
@@ -147,6 +149,7 @@ export function applyTool(oldState, tool, tileId) {
 }
 
 export function startFundraiser(oldState, fundraiserId) {
+  if (oldState.status !== 'playing') return { state: oldState, ok: false, message: 'The game has ended. Reset to begin again.' };
   const config = FUNDRAISERS[fundraiserId];
   if (!config) return { state: oldState, ok: false, message: 'Unknown community event.' };
   if (oldState.fundraisers.some((event) => event.status === 'preparing')) return { state: oldState, ok: false, message: 'Finish the current community event first.' };
@@ -191,7 +194,7 @@ function resolveProjects(state) {
     }
   }
 
-  if (state.bridge?.status === 'building' && state.bridge.readyWeek <= state.totalWeeks) {
+  if (state.bridge?.status === 'building' && state.bridge.segments.length === 2 && state.bridge.segments.every((segment) => segment.readyWeek <= state.totalWeeks)) {
     state.bridge.status = 'ready';
     addEvent(state, 'Canopy crossing construction completed. Wildlife use still needs to be observed.', 'build');
   }

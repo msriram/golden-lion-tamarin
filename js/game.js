@@ -1,5 +1,4 @@
 import {
-  COLS,
   applyTool,
   createInitialState,
   describeTile,
@@ -11,8 +10,9 @@ import {
   simulateOneWeek,
   startFundraiser
 } from './game-core.js';
+import { AREAS, terrainArtwork } from './terrain.js';
 
-const storageKey = 'goldenThreadsGameV1';
+const storageKey = 'tamarinTrailsGameV2';
 const map = document.querySelector('[data-game-map]');
 const message = document.querySelector('[data-game-message]');
 const tamarin = document.querySelector('[data-tamarin]');
@@ -20,13 +20,14 @@ const reportDialog = document.querySelector('[data-report-dialog]');
 let state = loadState() || createInitialState();
 let activeTool = 'inspect';
 let timer = null;
+let terminalReportShown = false;
 
 function loadState() {
   try {
     const saved = localStorage.getItem(storageKey);
     if (!saved) return null;
     const parsed = JSON.parse(saved);
-    return parsed.version === 1 ? parsed : null;
+    return parsed.version === 2 ? parsed : null;
   } catch {
     return null;
   }
@@ -49,27 +50,35 @@ function tileLabel(tile) {
 }
 
 function renderMap() {
-  map.innerHTML = '';
-  for (const tile of state.tiles) {
+  const focusId = document.activeElement?.dataset.tileId;
+  map.innerHTML = terrainArtwork();
+  for (const area of AREAS) {
+    const tile = findTile(state, area.id);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `map-cell ${tile.kind}`;
+    button.className = `terrain-area ${area.kind}`;
     button.dataset.tileId = tile.id;
-    button.setAttribute('aria-label', tileLabel(tile));
-    if (tile.kind === 'pasture' && !tile.permission) button.classList.add('private');
-    if (tile.row === 3 && tile.column >= 3 && tile.column <= 7) button.classList.add('route-target');
+    button.setAttribute('aria-label', `${area.name}. ${describeTile(tile)}`);
+    button.style.cssText = `left:${area.x}%;top:${area.y}%;width:${area.width}%;height:${area.height}%`;
+    button.innerHTML = `<span class="area-name">${area.name}${area.kind === 'planting' && !tile.permission ? ' · Permission needed' : ''}</span>`;
     if (tile.restoration) button.classList.add(`restored-${tile.restoration.stage}`);
-    if (tile.kind === 'road' && tile.row === 3 && state.bridge) button.classList.add(state.bridge.status === 'ready' ? 'bridge-site' : 'bridge-building');
+    const segment = state.bridge?.segments.find((entry) => entry.tileId === tile.id);
+    if (segment) button.classList.add(segment.readyWeek <= state.totalWeeks ? 'bridge-ready' : 'bridge-building');
+    if (area.kind === 'forest' || tile.restoration) {
+      const mature = area.kind === 'forest' || tile.restoration?.stage === 'mature';
+      button.innerHTML += Array.from({length: mature ? 14 : 7}, (_, index) => `<i class="terrain-tree ${mature ? '' : 'sapling'}" style="left:${15 + (index * 31 % 70)}%;top:${12 + (index * 23 % 64)}%"></i>`).join('');
+    }
     button.addEventListener('click', () => handleTileClick(tile.id));
     map.append(button);
   }
+  if (focusId) map.querySelector(`[data-tile-id="${focusId}"]`)?.focus({preventScroll:true});
 }
 
 function handleTileClick(tileId) {
   const result = applyTool(state, activeTool, tileId);
   state = result.state;
   const tile = findTile(state, tileId);
-  document.querySelector('[data-inspector-title]').textContent = activeTool === 'inspect' ? `Tile ${tile.row + 1}.${tile.column + 1}` : result.ok ? 'Action accepted' : 'Action blocked';
+  document.querySelector('[data-inspector-title]').textContent = activeTool === 'inspect' ? AREAS.find((area) => area.id === tileId).name : result.ok ? 'Action accepted' : 'Action blocked';
   document.querySelector('[data-inspector]').textContent = result.message;
   setMessage(result.message, result.ok ? 'success' : 'error');
   render();
@@ -77,13 +86,13 @@ function handleTileClick(tileId) {
 
 function positionTamarin() {
   const connected = isRouteConnected(state);
-  const disconnectedPath = [[1, 2], [2, 1], [3, 2], [4, 1]];
-  const connectedPath = [[3, 2], [3, 3], [3, 4], [3, 5], [3, 6.5], [3, 8], [3, 9], [3, 10]];
+  const disconnectedPath = [[44, 13], [38, 18], [48, 20], [44, 13]];
+  const connectedPath = [[44, 16], [37, 33], [31, 49], [39, 65], [48, 82], [39, 65], [31, 49], [37, 33]];
   const path = connected ? connectedPath : disconnectedPath;
   const index = Math.floor(state.totalWeeks / 2) % path.length;
-  const [row, column] = path[index];
-  tamarin.style.left = `${((column + 0.5) / COLS) * 100}%`;
-  tamarin.style.top = `${((row + 0.5) / 7) * 100}%`;
+  const [vertical, horizontal] = path[index];
+  tamarin.style.left = `${horizontal}%`;
+  tamarin.style.top = `${vertical}%`;
 }
 
 function renderObjectives(metrics) {
@@ -123,11 +132,13 @@ function renderEvents(metrics) {
 function renderControls() {
   const pauseButton = document.querySelector('[data-pause]');
   pauseButton.textContent = state.paused ? 'Start' : 'Pause';
+  pauseButton.disabled = state.status !== 'playing';
+  document.querySelector('[data-tool="restore"]').disabled = state.bridge?.status !== 'ready' || state.status !== 'playing';
   document.querySelectorAll('[data-speed]').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.speed) === state.speed)));
   document.querySelectorAll('[data-tool]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.tool === activeTool)));
   const eventPending = state.fundraisers.some((event) => event.status === 'preparing');
   document.querySelectorAll('[data-fundraiser]').forEach((button) => {
-    button.disabled = eventPending;
+    button.disabled = eventPending || state.status !== 'playing';
     button.title = eventPending ? 'Finish the current event first' : '';
   });
 }
@@ -146,11 +157,13 @@ function render() {
   renderEvents(metrics);
   renderControls();
 
-  if (state.status === 'won') {
+  if (state.status === 'won' && !terminalReportShown) {
+    terminalReportShown = true;
     setMessage('Mission complete: the route is mature, supported, and used.', 'success');
     showReport('The forest has a future', 'You combined consent, restoration, infrastructure, community support, and observed route use.', 'Mission complete');
   }
-  if (state.status === 'lost-funding') {
+  if (state.status === 'lost-funding' && !terminalReportShown) {
+    terminalReportShown = true;
     setMessage('Program ended after ten years of declining closing funds.', 'error');
     showReport('Support ran out', 'Closing funds declined for ten years in a row. Try a slower build plan with stronger community support.', 'Program ended');
   }
@@ -165,6 +178,8 @@ function showReport(title, copy, stamp = 'Annual report') {
   document.querySelector('[data-report="forest"]').textContent = `${metrics.forestPercent}%`;
   document.querySelector('[data-report="crossings"]').textContent = state.crossingCount;
   document.querySelector('[data-report="tamarins"]').textContent = state.monkeyCount;
+  document.querySelector('[data-report-continue]').textContent = state.status === 'playing' ? 'Continue the scenario' : 'Close report';
+  document.querySelector('[data-report-reset]').hidden = state.status === 'playing';
   if (!reportDialog.open) reportDialog.showModal();
 }
 
@@ -174,6 +189,7 @@ function restartTimer() {
   timer = setInterval(() => {
     const before = getMetrics(state).year;
     state = simulateOneWeek(state);
+    if (state.status !== 'playing') clearInterval(timer);
     const after = getMetrics(state).year;
     saveState(false);
     render();
@@ -220,17 +236,21 @@ document.querySelectorAll('[data-fundraiser]').forEach((button) => {
 });
 
 document.querySelector('[data-save]').addEventListener('click', () => saveState());
-document.querySelector('[data-reset]').addEventListener('click', () => {
-  if (!window.confirm('Reset this teaching scenario and erase the local save?')) return;
+function resetGame() {
+  if (reportDialog.open) reportDialog.close('reset');
   localStorage.removeItem(storageKey);
   state = createInitialState();
+  terminalReportShown = false;
   setMessage('Scenario reset. The simulation is paused.', 'success');
   render();
   restartTimer();
-});
+}
+
+document.querySelector('[data-reset]').addEventListener('click', resetGame);
+document.querySelector('[data-report-reset]').addEventListener('click', resetGame);
 
 reportDialog.addEventListener('close', () => {
-  if (state.status === 'playing') {
+  if (state.status === 'playing' && reportDialog.returnValue !== 'reset') {
     state = setPaused(state, false);
     render();
     restartTimer();

@@ -1,0 +1,32 @@
+body { background-image: none; background-color: #f6f5ee; }
+[hidden] { display: none !important; }
+h1, .hero-home h1 { font-size: clamp(2.4rem, 4.6vw, 4.2rem); font-weight: 650; letter-spacing: -.04em; line-height: 1.12; }
+h2 { font-size: clamp(1.8rem, 3.2vw, 3rem); font-weight: 600; }
+h3 { font-weight: 600; }
+strong, .primary-nav a, .button, .fact-label { font-weight: 600; }
+.eyebrow, .site-notice { font-weight: 600; }
+.lede, .hero-home .lede { font-family: var(--text); font-size: clamp(1.05rem, 1.5vw, 1.22rem); line-height: 1.75; }
+.hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; align-items: center; }
+.hero-art { margin: 0; padding: 0; transform: none; border: none; background: transparent; box-shadow: none; }
+.hero-art::before { display: none; }
+.hero-art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; border-radius: 12px; }
+.hero-art figcaption { color: #e2e9db; font-size: .7rem; padding-top: .8rem; }
+.hero-art figcaption a { color: #f4cb7d; }
+.hero-home { padding-block: 4rem; }
+.hero-home::after { display: none; }
+.hero-home h1 br { display: none; }
+.hero-home h1 { max-width: 9em; }
+.fact-band { margin-top: 0; padding-top: 2rem; }
+.fact-grid { box-shadow: none; border-top-width: 1px; }
+.fact-number { font-size: clamp(2rem, 4vw, 3.4rem); }
+.section { padding-block: clamp(3rem, 6vw, 5rem); }
+.eyebrow { font-size: .72rem; letter-spacing: .08em; }
+.brand-mark, .status-stamp, .idea-note { transform: none; }
+.brand-copy small { font-size: .58rem; letter-spacing: .04em; }
+.recycling-flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem; }
+.recycling-flow article { padding: 1.4rem; background: var(--paper); border-top: 3px solid var(--moss); }
+.recycling-flow h3 { font-size: 1.2rem; }
+.recycling-flow .tag { margin-bottom: .8rem; }
+.recycling-flow p { font-size: .92rem; }
+@media(max-width:1000px) { .hero-grid { grid-template-columns: 1fr; } .hero-art { max-width: 660px; } }
+@media(max-width:720px) { .recycling-flow { grid-template-columns:1fr; } .hero-home h1 { font-size: 2.7rem; } }

@@ -20,7 +20,7 @@
   --shadow: 0 14px 35px rgba(12, 43, 35, 0.11);
   --max: 1200px;
   --text: "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
-  --display: Georgia, "Times New Roman", serif;
+  --display: "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
 * {

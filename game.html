@@ -8,6 +8,7 @@
   <title>Reconnect the Rainforest Game — Tamarin Trails</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="refresh.css">
   <link rel="stylesheet" href="game.css">
 </head>
 <body data-page="game" class="game-page">
@@ -25,8 +26,8 @@
     <section class="game-intro shell">
       <p class="eyebrow">Tamarin Trails: Reconnect the Rainforest</p>
       <h1>Build a route that can grow, work, and last.</h1>
-      <p class="lede">Reconnect two teaching-model forest patches. You will need voluntary permission, young trees that take time to mature, a short road crossing, community support, and observed wildlife use.</p>
-      <p class="caveat">This is not a real field map or engineering plan. Game costs use fictional Forest Credits (FC). No real wildlife locations, donation data, or child information are collected.</p>
+      <p class="lede">Connect three forest groves with tree bridges, then grow new cover in the surrounding meadows. Work with landowners, raise community support, and observe the tamarins’ route.</p>
+      <p class="caveat">Bridge-first planting is a game progression rule; real forest restoration can begin without bridges. This is a teaching landscape. Game costs use fictional Forest Credits (FC). No real wildlife locations, donation data, or child information are collected.</p>
     </section>
 
     <section class="game-frame" id="game-app" aria-label="Tamarin Trails conservation game">
@@ -49,16 +50,16 @@
 
       <div class="game-layout">
         <div class="game-main">
-          <div class="mission-strip"><span><strong>Mission:</strong> finish the golden row from west forest to east forest.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
+          <div class="mission-strip"><span><strong>Mission:</strong> connect the forest patches with both tree bridges, then grow tree cover.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
           <div class="toolbelt" aria-label="Build tools">
-            <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Read any tile</small></button>
+            <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Explore a forest area</small></button>
             <button class="tool-button" type="button" data-tool="restore" aria-pressed="false">Plant corridor<small>110 FC • 104 weeks</small></button>
             <button class="tool-button" type="button" data-tool="agreement" aria-pressed="false">Land agreement<small>800 FC • 8 weeks</small></button>
             <button class="tool-button" type="button" data-tool="bridge" aria-pressed="false">Canopy crossing<small>2,400 FC • 8 weeks</small></button>
           </div>
           <div class="map-scroll">
             <div class="map-wrap">
-              <div class="game-map" data-game-map aria-label="Interactive 12 by 7 conservation map"></div>
+              <div class="game-map" data-game-map aria-label="Irregular forest landscape with tree bridges and planting areas"></div>
               <div class="tamarin-token" data-tamarin aria-hidden="true"></div>
             </div>
           </div>
@@ -72,8 +73,8 @@
         </div>
 
         <aside class="game-sidebar" aria-label="Game information">
-          <section class="side-panel"><h2>Objectives</h2><ul class="objectives" data-objectives><li data-objective="permission">Reach a voluntary land agreement</li><li data-objective="plant">Plant all 3 corridor tiles</li><li data-objective="bridge">Complete the short road crossing</li><li data-objective="mature">Wait for canopy readiness</li><li data-objective="observe">Observe 2 tamarin crossings</li><li data-objective="community">Reach 20 community awareness</li></ul></section>
-          <section class="side-panel"><h2>Field notebook</h2><h3 data-inspector-title>Start here</h3><p class="inspector-copy" data-inspector>Choose a tool, then select a tile. Plant the two permitted pasture tiles first. The parcel beside the road needs a land agreement.</p></section>
+          <section class="side-panel"><h2>Objectives</h2><ul class="objectives" data-objectives><li data-objective="permission">Reach a voluntary land agreement</li><li data-objective="plant">Restore all 3 planting areas</li><li data-objective="bridge">Complete both tree bridges</li><li data-objective="mature">Wait for canopy readiness</li><li data-objective="observe">Observe 2 tamarin crossings</li><li data-objective="community">Reach 20 community awareness</li></ul></section>
+          <section class="side-panel"><h2>Field notebook</h2><h3 data-inspector-title>Start here</h3><p class="inspector-copy" data-inspector>Choose Canopy crossing and select each bridge gap. Once both bridges finish, tree cover unlocks. The farm-edge area needs a land agreement.</p></section>
           <section class="side-panel"><h2>Wildlife indicators</h2><div class="wildlife-list" data-wildlife></div><p class="caveat">Illustrative indices, not animal counts.</p></section>
           <section class="side-panel"><h2>Community events</h2><div class="fundraiser-grid"><button class="fundraiser-button" type="button" data-fundraiser="presentation">Class presentation<small>40 FC • 4 weeks • +160 FC</small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small>250 FC • 10 weeks • +900 FC</small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">School science fair<small>340 FC • 12 weeks • +1,450 FC</small></button></div></section>
           <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log aria-live="polite"></ol></section>
@@ -84,7 +85,7 @@
 
     <section class="section compact shell">
       <div class="split">
-        <div><p class="eyebrow">How to win</p><h2>Habitat first. Evidence next.</h2><ol class="steps"><li><div><strong>Secure consent</strong><p>Use the agreement tool on the private pasture tile marked with a house.</p></div></li><li><div><strong>Restore the route</strong><p>Plant all three highlighted pasture tiles and build the crossing on the highlighted road row.</p></div></li><li><div><strong>Let time pass</strong><p>Young restoration cannot become instant habitat. Use 4× speed, but the model still advances week by week.</p></div></li><li><div><strong>Observe use</strong><p>A finished route is not counted as successful until the simulated family actually uses it.</p></div></li></ol></div>
+        <div><p class="eyebrow">How to win</p><h2>Habitat first. Evidence next.</h2><ol class="steps"><li><div><strong>Secure consent</strong><p>Use the agreement tool on the farm-edge planting area.</p></div></li><li><div><strong>Restore the route</strong><p>Build both tree bridges across the gaps. After eight simulated weeks, plant the three named restoration areas.</p></div></li><li><div><strong>Let time pass</strong><p>Young restoration cannot become instant habitat. Use 4× speed, but the model still advances week by week.</p></div></li><li><div><strong>Observe use</strong><p>A finished route is not counted as successful until the simulated family actually uses it.</p></div></li></ol></div>
         <aside><div class="note-card"><h3>Why no instant trees?</h3><p>Real corridors need site preparation, mixed native plantings, maintenance, and years of growth. This scenario compresses that work to 104 weeks so it can be played in class.</p></div><div class="note-card"><h3>Why ground wildlife barely changes?</h3><p>A canopy rope crossing is designed for arboreal animals. Ground mammals need different routes such as suitable overpasses or underpasses.</p></div></aside>
       </div>
     </section>
@@ -96,11 +97,11 @@
       <h2 data-report-title>Year report</h2>
       <p data-report-copy>Review the changes before continuing.</p>
       <div class="report-grid"><div><small>Closing funds</small><strong data-report="funds">—</strong></div><div><small>Forest cover</small><strong data-report="forest">—</strong></div><div><small>Observed crossings</small><strong data-report="crossings">—</strong></div><div><small>Tamarins</small><strong data-report="tamarins">—</strong></div></div>
-      <form method="dialog"><button class="button" type="submit">Continue the scenario</button></form>
+      <form method="dialog"><div class="button-row"><button class="button" type="submit" data-report-continue>Continue the scenario</button><button class="button secondary" type="button" data-report-reset hidden>Reset game</button></div></form>
     </div>
   </dialog>
 
-  <footer class="site-footer"><div class="shell"><div class="footer-grid"><div><h2>Tamarin Trails</h2><p>A teaching game about connected habitat, patient restoration, and community decisions.</p></div><div><h3>Learn</h3><div class="footer-links"><a href="story.html">The science</a><a href="resources.html">Classroom guide</a></div></div><div><h3>Trust</h3><div class="footer-links"><a href="sources.html">Sources</a><a href="resources.html#privacy">Privacy</a></div></div></div><div class="footer-bottom"><span>Game progress stays in your browser.</span><span>No real money or wildlife locations are used.</span></div></div></footer>
+  <footer class="site-footer"><div class="shell"><div class="footer-grid"><div><h2>Tamarin Trails</h2><p>A teaching game about connected habitat, patient restoration, and community decisions.</p></div><div><h3>Learn</h3><div class="footer-links"><a href="story.html">The science</a><a href="resources.html">Classroom guide</a></div></div><div><h3>Trust</h3><div class="footer-links"><a href="sources.html">Sources</a><a href="resources.html#privacy">Privacy</a></div></div></div><div class="footer-bottom"><span>Last updated Oct 2026</span><span>Game progress stays in your browser.</span><span>No real money or wildlife locations are used.</span></div></div></footer>
   <script type="module" src="js/site.js"></script>
   <script type="module" src="js/game.js"></script>
 </body>
