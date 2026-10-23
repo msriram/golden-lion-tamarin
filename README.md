@@ -1,4 +1,4 @@
-# Golden Threads — Connect the Forest
+# Tamarin Trails — Growing forest, connecting families
 
 A static, accessible conservation website created for a fourth-grade FIRST LEGO League team at Theodore Judah Elementary in Folsom, California.
 

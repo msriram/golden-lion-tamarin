@@ -435,6 +435,32 @@ p {
   transform: rotate(-4deg);
 }
 
+.hero-art figcaption {
+  padding: 0.8rem 0.4rem 0.2rem;
+  color: var(--forest-950);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.hero-art figcaption strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.hope-summary {
+  display: flex;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-top: 3px solid var(--gold);
+  background: var(--cream);
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+#hope-ahead {
+  scroll-margin-top: 90px;
+}
+
 .fact-band {
   position: relative;
   z-index: 2;

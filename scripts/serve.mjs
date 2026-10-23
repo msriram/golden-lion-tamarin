@@ -34,5 +34,5 @@ createServer(async (request, response) => {
     response.end('Not found');
   }
 }).listen(port, () => {
-  console.log(`Golden Threads is running at http://localhost:${port}`);
+  console.log(`Tamarin Trails is running at http://localhost:${port}`);
 });

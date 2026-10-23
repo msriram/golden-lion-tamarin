@@ -1,4 +1,4 @@
-name: Deploy Golden Threads to GitHub Pages
+name: Deploy Tamarin Trails to GitHub Pages
 
 on:
   push:
