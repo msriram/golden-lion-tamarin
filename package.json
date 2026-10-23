@@ -1,0 +1,12 @@
+{
+  "name": "golden-threads",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test",
+    "validate": "node scripts/validate-content.mjs",
+    "check": "npm run test && npm run validate"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "lastUpdated": "2026-10-22",
+  "currency": "USD",
+  "goal": 2500,
+  "stages": {
+    "pledged": 0,
+    "received": 0,
+    "sent": 0,
+    "acknowledged": 0
+  },
+  "fieldOutcomes": {
+    "seedlingsReported": 0,
+    "crossingsReported": 0,
+    "hectaresReported": 0
+  },
+  "planningAssumptions": {
+    "seedlingCareShare": 15,
+    "canopyCrossingShare": 2400,
+    "monitoringDayShare": 350
+  },
+  "notes": [
+    "No fundraising activity has been entered yet.",
+    "Planning equivalents are classroom scenarios, not quotes from a conservation partner.",
+    "Field outcomes remain at zero until a recipient organization reports them."
+  ]
+}

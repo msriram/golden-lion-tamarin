@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Play Golden Threads, a browser conservation game about reconnecting golden lion tamarin habitat with trees, crossings, funding, and community agreements.">
+  <meta name="theme-color" content="#12382d">
+  <title>Reconnect the Rainforest Game — Golden Threads</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="game.css">
+</head>
+<body data-page="game" class="game-page">
+  <a class="skip-link" href="#game-app">Skip to the game</a>
+  <div class="site-notice">Teaching simulation • Forest Credits are fictional • No accounts or tracking</div>
+  <header class="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="index.html" aria-label="Golden Threads home"><span class="brand-mark" aria-hidden="true">GT</span><span class="brand-copy"><strong>Golden Threads</strong><small>Connect the Forest</small></span></a>
+      <nav class="primary-nav" data-nav aria-label="Primary navigation"><a href="index.html" data-nav-link="home">Home</a><a href="story.html" data-nav-link="story">Discover</a><a href="game.html" data-nav-link="game">Play</a><a href="team.html" data-nav-link="team">Our team</a><a href="impact.html" data-nav-link="impact">Impact</a><a href="resources.html" data-nav-link="resources">Teachers</a><a href="sources.html" data-nav-link="sources">Sources</a></nav>
+      <div class="nav-actions"><button class="icon-button" type="button" data-motion-toggle aria-pressed="false" title="Reduce motion">≈</button><button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false">Menu</button></div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="game-intro shell">
+      <p class="eyebrow">Golden Threads: Reconnect the Rainforest</p>
+      <h1>Build a route that can grow, work, and last.</h1>
+      <p class="lede">Reconnect two teaching-model forest patches. You will need voluntary permission, young trees that take time to mature, a short road crossing, community support, and observed wildlife use.</p>
+      <p class="caveat">This is not a real field map or engineering plan. Game costs use fictional Forest Credits (FC). No real wildlife locations, donation data, or child information are collected.</p>
+    </section>
+
+    <section class="game-frame" id="game-app" aria-label="Golden Threads conservation game">
+      <div class="game-titlebar"><strong>Scenario 01 — The Missing Link</strong><span>Story mode • fixed weekly simulation</span></div>
+      <div class="game-hud" aria-label="Game statistics">
+        <div class="hud-stat"><small>Funds</small><strong data-hud="funds">18,500 FC</strong></div>
+        <div class="hud-stat"><small>Calendar</small><strong data-hud="calendar">Y1 • W1</strong></div>
+        <div class="hud-stat"><small>Tamarins</small><strong data-hud="tamarins">6</strong></div>
+        <div class="hud-stat"><small>Forest cover</small><strong data-hud="forest">—</strong></div>
+        <div class="hud-stat"><small>Observed crossings</small><strong data-hud="crossings">0</strong></div>
+        <div class="hud-controls">
+          <button class="game-button" type="button" data-pause>Start</button>
+          <button class="speed-button" type="button" data-speed="1" aria-pressed="true">1×</button>
+          <button class="speed-button" type="button" data-speed="2" aria-pressed="false">2×</button>
+          <button class="speed-button" type="button" data-speed="4" aria-pressed="false">4×</button>
+          <button class="game-button" type="button" data-save>Save</button>
+          <button class="game-button" type="button" data-reset>Reset</button>
+        </div>
+      </div>
+
+      <div class="game-layout">
+        <div class="game-main">
+          <div class="mission-strip"><span><strong>Mission:</strong> finish the golden row from west forest to east forest.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
+          <div class="toolbelt" aria-label="Build tools">
+            <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Read any tile</small></button>
+            <button class="tool-button" type="button" data-tool="restore" aria-pressed="false">Plant corridor<small>110 FC • 104 weeks</small></button>
+            <button class="tool-button" type="button" data-tool="agreement" aria-pressed="false">Land agreement<small>800 FC • 8 weeks</small></button>
+            <button class="tool-button" type="button" data-tool="bridge" aria-pressed="false">Canopy crossing<small>2,400 FC • 8 weeks</small></button>
+          </div>
+          <div class="map-scroll">
+            <div class="map-wrap">
+              <div class="game-map" data-game-map aria-label="Interactive 12 by 7 conservation map"></div>
+              <div class="tamarin-token" data-tamarin aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="map-legend" aria-label="Map legend">
+            <span class="legend-item"><span class="legend-swatch forest"></span>Established forest</span>
+            <span class="legend-item"><span class="legend-swatch pasture"></span>Pasture</span>
+            <span class="legend-item"><span class="legend-swatch road"></span>Road</span>
+            <span class="legend-item"><span class="legend-swatch growing"></span>Restoration</span>
+            <span class="legend-item">⌂ Permission needed</span>
+          </div>
+        </div>
+
+        <aside class="game-sidebar" aria-label="Game information">
+          <section class="side-panel"><h2>Objectives</h2><ul class="objectives" data-objectives><li data-objective="permission">Reach a voluntary land agreement</li><li data-objective="plant">Plant all 3 corridor tiles</li><li data-objective="bridge">Complete the short road crossing</li><li data-objective="mature">Wait for canopy readiness</li><li data-objective="observe">Observe 2 tamarin crossings</li><li data-objective="community">Reach 20 community awareness</li></ul></section>
+          <section class="side-panel"><h2>Field notebook</h2><h3 data-inspector-title>Start here</h3><p class="inspector-copy" data-inspector>Choose a tool, then select a tile. Plant the two permitted pasture tiles first. The parcel beside the road needs a land agreement.</p></section>
+          <section class="side-panel"><h2>Wildlife indicators</h2><div class="wildlife-list" data-wildlife></div><p class="caveat">Illustrative indices, not animal counts.</p></section>
+          <section class="side-panel"><h2>Community events</h2><div class="fundraiser-grid"><button class="fundraiser-button" type="button" data-fundraiser="presentation">Class presentation<small>40 FC • 4 weeks • +160 FC</small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small>250 FC • 10 weeks • +900 FC</small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">School science fair<small>340 FC • 12 weeks • +1,450 FC</small></button></div></section>
+          <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log aria-live="polite"></ol></section>
+        </aside>
+      </div>
+      <div class="game-message" data-game-message role="status">The simulation is paused. Press Start when you are ready.</div>
+    </section>
+
+    <section class="section compact shell">
+      <div class="split">
+        <div><p class="eyebrow">How to win</p><h2>Habitat first. Evidence next.</h2><ol class="steps"><li><div><strong>Secure consent</strong><p>Use the agreement tool on the private pasture tile marked with a house.</p></div></li><li><div><strong>Restore the route</strong><p>Plant all three highlighted pasture tiles and build the crossing on the highlighted road row.</p></div></li><li><div><strong>Let time pass</strong><p>Young restoration cannot become instant habitat. Use 4× speed, but the model still advances week by week.</p></div></li><li><div><strong>Observe use</strong><p>A finished route is not counted as successful until the simulated family actually uses it.</p></div></li></ol></div>
+        <aside><div class="note-card"><h3>Why no instant trees?</h3><p>Real corridors need site preparation, mixed native plantings, maintenance, and years of growth. This scenario compresses that work to 104 weeks so it can be played in class.</p></div><div class="note-card"><h3>Why ground wildlife barely changes?</h3><p>A canopy rope crossing is designed for arboreal animals. Ground mammals need different routes such as suitable overpasses or underpasses.</p></div></aside>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="game-dialog" data-report-dialog>
+    <div class="dialog-content">
+      <span class="status-stamp" data-report-stamp>Annual report</span>
+      <h2 data-report-title>Year report</h2>
+      <p data-report-copy>Review the changes before continuing.</p>
+      <div class="report-grid"><div><small>Closing funds</small><strong data-report="funds">—</strong></div><div><small>Forest cover</small><strong data-report="forest">—</strong></div><div><small>Observed crossings</small><strong data-report="crossings">—</strong></div><div><small>Tamarins</small><strong data-report="tamarins">—</strong></div></div>
+      <form method="dialog"><button class="button" type="submit">Continue the scenario</button></form>
+    </div>
+  </dialog>
+
+  <footer class="site-footer"><div class="shell"><div class="footer-grid"><div><h2>Golden Threads</h2><p>A teaching game about connected habitat, patient restoration, and community decisions.</p></div><div><h3>Learn</h3><div class="footer-links"><a href="story.html">The science</a><a href="resources.html">Classroom guide</a></div></div><div><h3>Trust</h3><div class="footer-links"><a href="sources.html">Sources</a><a href="resources.html#privacy">Privacy</a></div></div></div><div class="footer-bottom"><span>Game progress stays in your browser.</span><span>No real money or wildlife locations are used.</span></div></div></footer>
+  <script type="module" src="js/site.js"></script>
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
