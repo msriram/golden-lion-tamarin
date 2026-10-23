@@ -25,17 +25,17 @@
   <main id="main">
     <section class="game-intro shell">
       <p class="eyebrow">Tamarin Trails: Reconnect the Rainforest</p>
-      <h1>Build a route that can grow, work, and last.</h1>
-      <p class="lede">Connect three forest groves with tree bridges, then grow new cover in the surrounding meadows. Work with landowners, raise community support, and observe the tamarins’ route.</p>
-      <p class="caveat">Play with fictional Forest Credits. Build bridges to unlock planting in this game; in the real forest, planting can start independently.</p>
+      <h1>Keep the forest alive. Keep the program afloat.</h1>
+      <p class="lede">Six isolated groves. One shrinking grant. Build a conservation program that can survive dry seasons, bridge repairs, and the weekly cost of working with local communities.</p>
+      <p class="caveat">Hard campaign · fictional Forest Credits · earliest victory after ten simulated years. Pause whenever you need to plan.</p>
     </section>
 
     <section class="game-frame" id="game-app" aria-label="Tamarin Trails conservation game">
-      <div class="game-titlebar"><strong>Scenario 01 — The Missing Link</strong><span>Story mode</span></div>
+      <div class="game-titlebar"><strong>Campaign — The Cost of Connection</strong><span>Challenge · seed 73</span></div>
       <div class="game-hud" aria-label="Game statistics">
-        <div class="hud-stat"><small>Funds</small><strong data-hud="funds">18,500 FC</strong></div>
+        <div class="hud-stat"><small>Funds</small><strong data-hud="funds">12,000 FC</strong></div>
         <div class="hud-stat"><small>Calendar</small><strong data-hud="calendar">Y1 • W1</strong></div>
-        <div class="hud-stat"><small>Tamarins</small><strong data-hud="tamarins">6</strong></div>
+        <div class="hud-stat"><small>Tamarins</small><strong data-hud="tamarins">24</strong></div>
         <div class="hud-stat"><small>Forest cover</small><strong data-hud="forest">—</strong></div>
         <div class="hud-stat"><small>Observed crossings</small><strong data-hud="crossings">0</strong></div>
         <div class="hud-controls">
@@ -43,19 +43,20 @@
           <button class="speed-button" type="button" data-speed="1" aria-pressed="true">1×</button>
           <button class="speed-button" type="button" data-speed="2" aria-pressed="false">2×</button>
           <button class="speed-button" type="button" data-speed="4" aria-pressed="false">4×</button>
-          <button class="game-button" type="button" data-save>Save</button>
+          <button class="speed-button" type="button" data-speed="8" aria-pressed="false">8×</button><button class="game-button" type="button" data-save>Save</button>
           <button class="game-button" type="button" data-reset>Reset</button>
         </div>
       </div>
 
       <div class="game-layout">
         <div class="game-main">
-          <div class="mission-strip"><span><strong>Mission:</strong> connect the forest patches with both tree bridges, then grow tree cover.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
-          <div class="toolbelt" aria-label="Build tools">
-            <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Explore a forest area</small></button>
-            <button class="tool-button" type="button" data-tool="restore" aria-pressed="false">Plant corridor<small>110 FC • 104 weeks</small></button>
-            <button class="tool-button" type="button" data-tool="agreement" aria-pressed="false">Land agreement<small>800 FC • 8 weeks</small></button>
-            <button class="tool-button" type="button" data-tool="bridge" aria-pressed="false">Canopy crossing<small>2,400 FC • 8 weeks</small></button>
+          <div class="mission-strip"><span><strong>Mission:</strong> connect five groves and sustain recovery, trust, and finances for three years.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
+          <div class="toolbelt" aria-label="Route tools">
+            <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Costs, condition, survival</small></button>
+            <button class="tool-button" type="button" data-tool="agreement" aria-pressed="false">Negotiate<small>600 FC · 12 weeks · +9/week</small></button>
+            <button class="tool-button" type="button" data-tool="bridge" aria-pressed="false">Build bridge<small>1,800–3,400 FC · +15/week</small></button>
+            <button class="tool-button" type="button" data-tool="restore" aria-pressed="false">Plant cover<small>1,200 FC · 4 years · +16/week</small></button>
+            <button class="tool-button" type="button" data-tool="repair" aria-pressed="false">Repair & replant<small>500 FC · restore condition</small></button>
           </div>
           <div class="map-scroll">
             <div class="map-wrap">
@@ -70,25 +71,29 @@
             <span class="legend-item"><span class="legend-swatch growing"></span>Restoration</span>
             <span class="legend-item">⌂ Permission needed</span>
           </div>
+          <section class="finance-panel" aria-label="Budget and cash runway"><h2>Every week counts.</h2><div class="finance-grid" data-finance></div><p class="risk-message" data-risk role="status"></p><p class="fact-note">Weekly bills include 105 FC base operations, 9 per land agreement, 15 per bridge, 16 per planting, plus enabled programs. A cash shortfall stops construction and growth, erodes trust, and damages habitat.</p></section>
+          <section class="finance-panel"><h2>Annual accounts</h2><div class="accounts-scroll"><table class="campaign-table"><thead><tr><th>Year</th><th>Income</th><th>Spending</th><th>Closing FC</th><th>Recovery</th></tr></thead><tbody data-history></tbody></table></div></section>
         </div>
 
-        <aside class="game-sidebar" aria-label="Game information">
-          <section class="side-panel"><h2>Objectives</h2><ul class="objectives" data-objectives><li data-objective="permission">Reach a voluntary land agreement</li><li data-objective="plant">Restore all 3 planting areas</li><li data-objective="bridge">Complete both tree bridges</li><li data-objective="mature">Wait for canopy readiness</li><li data-objective="observe">Observe 2 tamarin crossings</li><li data-objective="community">Reach 20 community awareness</li></ul></section>
-          <section class="side-panel"><h2>Field notebook</h2><h3 data-inspector-title>Start here</h3><p class="inspector-copy" data-inspector>Choose Canopy crossing and select each bridge gap. Once both bridges finish, tree cover unlocks. The farm-edge area needs a land agreement.</p></section>
-          <section class="side-panel"><h2>Wildlife indicators</h2><div class="wildlife-list" data-wildlife></div><p class="caveat">Illustrative indices, not animal counts.</p></section>
-          <section class="side-panel"><h2>Community events</h2><div class="fundraiser-grid"><button class="fundraiser-button" type="button" data-fundraiser="presentation">Class presentation<small>40 FC • 4 weeks • +160 FC</small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small>250 FC • 10 weeks • +900 FC</small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">School science fair<small>340 FC • 12 weeks • +1,450 FC</small></button></div></section>
-          <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log aria-live="polite"></ol></section>
+        <aside class="game-sidebar" aria-label="Campaign management">
+          <section class="side-panel"><h2>Recovery targets</h2><ul class="objectives"><li data-objective="network"></li><li data-objective="forest"></li><li data-objective="population"></li><li data-objective="health"></li><li data-objective="community"></li><li data-objective="stability"></li></ul><p class="fact-note">Qualifying years start after Year 8 and also require 20 observed crossings, fully paid bills, and a nondecreasing year-end balance.</p></section>
+          <section class="side-panel"><h2>Local programs</h2>
+            <button class="program-button" type="button" data-service="outreach" aria-pressed="false">Community outreach · 45 FC/week<small>Builds trust; unlocks agreements and recurring donors.</small></button>
+            <button class="program-button" type="button" data-service="monitoring" aria-pressed="false">Field monitoring · 32 FC/week<small>Builds grant evidence and records crossing use.</small></button>
+            <button class="program-button" type="button" data-service="nursery" aria-pressed="false">Nursery care · 40 FC/week<small>Improves seedling survival and drought resilience.</small></button>
+          </section>
+          <section class="side-panel"><h2>Funding desk</h2><p class="fact-note" data-campaign></p><div class="fundraiser-grid">
+            <button class="fundraiser-button" type="button" data-fundraiser="presentation">School outreach<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">Science festival<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="grant">Evidence grant<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="appeal">Emergency appeal<small></small></button>
+          </div><p class="fact-note">Event income depends on trust and turnout. Grants need 20 evidence and 45 trust at application and payout. Audiences have cooldowns.</p></section>
+          <section class="side-panel"><h2>Field notebook</h2><h3 data-inspector-title>Choose your first route</h3><p class="inspector-copy" data-inspector>Base operations cost 105 FC every week before outreach or projects. Secure funding early. Route labels show construction prices; inspect them for recurring costs.</p></section>
+          <section class="side-panel"><h2>Wildlife indices</h2><div class="wildlife-list" data-wildlife></div></section>
+          <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log></ol></section>
         </aside>
       </div>
       <div class="game-message" data-game-message role="status">The simulation is paused. Press Start when you are ready.</div>
     </section>
 
-    <section class="section compact shell">
-      <div class="split">
-        <div><p class="eyebrow">How to win</p><h2>Habitat first. Evidence next.</h2><ol class="steps"><li><div><strong>Secure consent</strong><p>Use the agreement tool on the farm-edge planting area.</p></div></li><li><div><strong>Restore the route</strong><p>Build both tree bridges across the gaps. After eight simulated weeks, plant the three named restoration areas.</p></div></li><li><div><strong>Let time pass</strong><p>Young restoration cannot become instant habitat. Use 4× speed, but the model still advances week by week.</p></div></li><li><div><strong>Observe use</strong><p>A finished route is not counted as successful until the simulated family actually uses it.</p></div></li></ol></div>
-        <aside><div class="note-card"><h3>Why no instant trees?</h3><p>Real corridors need site preparation, mixed native plantings, maintenance, and years of growth. This scenario compresses that work to 104 weeks so it can be played in class.</p></div><div class="note-card"><h3>Why ground wildlife barely changes?</h3><p>A canopy rope crossing is designed for arboreal animals. Ground mammals need different routes such as suitable overpasses or underpasses.</p></div></aside>
-      </div>
-    </section>
+    <section class="section compact shell"><div class="split"><div><p class="eyebrow">Survival guide</p><h2>Spend slowly. Earn trust. Keep reserves.</h2><ol class="steps"><li><div><strong>Fund the people first</strong><p>Outreach raises community trust; monitoring creates grant evidence. Both draw cash each week. Turn programs on or off as your runway changes.</p></div></li><li><div><strong>Choose a network</strong><p>Seven routes connect six groves. Each agreement adds an ongoing obligation. One crew builds at a time; complete a bridge before planting along that route.</p></div></li><li><div><strong>Care for what you built</strong><p>Canopy development takes four years of funded care. Drought affects seedlings; storms damage bridges. A bridge below 45% condition closes. Trees below 60% survival do not count as a mature corridor.</p></div></li><li><div><strong>Prove recovery lasts</strong><p>After Year 8, meet every target for three consecutive annual reports, including stable funds. A bad year resets that streak.</p></div></li></ol></div><aside><div class="note-card"><h3>Running out of money</h3><p>At zero, projects stop and bills go unpaid. An emergency appeal is slow and small; it cannot replace a funding plan. Twenty-six consecutive unpaid weeks ends the campaign.</p></div><div class="note-card"><h3>Other ways to lose</h3><p>Ten consecutive years of falling closing balances ends the program, even with cash left. Losing all local tamarin families also ends the campaign.</p></div><div class="note-card"><h3>The model</h3><p>This fictional scenario compresses ecology into playable rules. Forest Credits and wildlife indices are game values. Bridge-first planting is the game’s progression system.</p></div></aside></div></section>
   </main>
 
   <dialog class="game-dialog" data-report-dialog>

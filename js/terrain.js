@@ -1,14 +1,3 @@
-export const AREAS = [
-  { id: '2-1', name: 'West forest', kind: 'forest', x: 16, y: 44, width: 23, height: 39 },
-  { id: '2-8', name: 'Hill grove', kind: 'forest', x: 49, y: 31, width: 20, height: 33 },
-  { id: '4-9', name: 'East forest', kind: 'forest', x: 82, y: 48, width: 26, height: 44 },
-  { id: '3-6', name: 'West tree bridge', kind: 'crossing', x: 33, y: 37, width: 13, height: 11 },
-  { id: '3-7', name: 'East tree bridge', kind: 'crossing', x: 65, y: 39, width: 13, height: 11 },
-  { id: '3-3', name: 'Meadow planting', kind: 'planting', x: 30, y: 66, width: 20, height: 25 },
-  { id: '3-4', name: 'Hillside planting', kind: 'planting', x: 49, y: 61, width: 18, height: 24 },
-  { id: '3-5', name: 'Farm-edge planting', kind: 'planting', x: 67, y: 68, width: 19, height: 26 }
-];
-
 export function terrainArtwork() {
   return `<svg class="terrain-art" viewBox="0 0 1000 660" preserveAspectRatio="none" aria-hidden="true">
     <defs><pattern id="grass" width="57" height="61" patternUnits="userSpaceOnUse"><path d="M13 16l2-6 3 7M41 45l2-5 2 6" fill="none" stroke="#8b9b62" stroke-width="2" opacity=".4"/></pattern></defs>

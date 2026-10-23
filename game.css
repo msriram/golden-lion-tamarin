@@ -670,3 +670,24 @@
 .game-button:disabled, .tool-button:disabled, .fundraiser-button:disabled { opacity: .5; cursor: default; }
 .tamarin-token { transition: left 500ms linear, top 500ms linear; }
 @media(max-width:760px) { .game-map { min-width: 0; min-height: 360px; } .terrain-area { min-height: 44px; } .area-name { max-width: 95px; white-space: normal; font-size: .58rem; } }
+
+.toolbelt { grid-template-columns: repeat(5, 1fr); }
+.route-marker { position:absolute; transform:translate(-50%,-50%); z-index:8; min-height:44px; max-width:125px; padding:5px 8px; border:2px solid #7a784b; border-radius:6px; background:#fff6df; color:#243e2c; font-size:.7rem; cursor:pointer; box-shadow:0 3px 8px #183c2520; }
+.route-marker.active { border-color:#3b704b; background:#e5efcc; }
+.route-marker.broken { border-color:#a84929; }
+.route-marker small { display:block; font-size:.58rem; }
+.route-marker:hover, .route-marker:focus-visible { border-color:#d68e20; background:#ffe2a2; }
+.program-button { display:block; width:100%; margin-top:.5rem; padding:.7rem; border:1px solid var(--forest-900); color:var(--forest-900); background:transparent; text-align:left; cursor:pointer; font-size:.8rem; font-weight:600; }
+.program-button small { display:block; font-weight:400; margin-top:.25rem; }
+.program-button[aria-pressed="true"] { background:#254b3a; color:#fff8e7; border-left:7px solid #ecb84e; }
+.finance-panel { margin-top:1.5rem; padding:1.3rem; background:var(--paper); border-top:3px solid var(--forest-800); }
+.finance-panel h2 { font-size:1.4rem; }
+.finance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.7rem; }
+.finance-grid div { background:#ece9d8; padding:.8rem; }
+.finance-grid span { display:block; font-size:.7rem; }
+.finance-grid strong { display:block; color:var(--forest-900); font-size:1.25rem; }
+.finance-grid .critical { background:#f3d5be; }
+.risk-message { margin-top:1rem; border-left:4px solid var(--gold); padding:.7rem; font-size:.83rem; background:#f6e9c7; }
+.accounts-scroll { overflow-x:auto; }
+.accounts-scroll td, .accounts-scroll th { padding:.65rem; font-size:.72rem; }
+@media(max-width:760px) { .toolbelt { grid-template-columns:repeat(2,1fr); } .route-marker { max-width:85px; font-size:.6rem; padding:3px; } .route-marker small { font-size:.5rem; } .game-map { min-height:440px; } .finance-grid { grid-template-columns:repeat(2,1fr); } }

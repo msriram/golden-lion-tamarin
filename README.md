@@ -18,7 +18,11 @@ npm run check
 
 The project uses no third-party runtime dependencies. GitHub Pages serves the files directly from the repository through the included workflow.
 
-The terrain game uses version 2 local saves under `tamarinTrailsGameV2`. Earlier grid-game saves remain separate. Complete both tree bridges to unlock planting; this is an educational progression rule. The end report can be closed or reset directly.
+The conservation campaign uses version 3 local saves under `tamarinTrailsCampaignV3`. Earlier saves remain separate. Six patches and seven candidate routes support several network choices. Construction crews, paid outreach, monitoring, nurseries, delayed grants, audience cooldowns, weekly operations, bridge condition, seedling survival, storms, and dry seasons interact. All costs and biological rates are fictional game balance values.
+
+Complete a route's bridge to unlock its planting. Four years of funded growth and at least 60% survival produce mature cover. Win by sustaining all ecological and financial targets for three annual reviews from Year 8 onward. Loss conditions are 26 consecutive unpaid weeks, ten consecutive declining year-end balances, or disappearance of all local families. End reports can be closed or reset.
+
+Run `node scripts/playtest.mjs` for seeded comparisons of idle, rushing, always-funded-services, and adaptive reserve strategies. The regression tests verify a winning adaptive policy across three seeds; these are developer playtests, not measured student success rates.
 
 Future project ideas live in the team page's Hope ahead and Bottle lab sections. Proposed activities must be updated with evidence before being marked complete.
 
