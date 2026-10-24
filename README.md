@@ -26,6 +26,10 @@ Start with 5,000 simulated tamarins; win at 10,000 and lose strictly below 1,000
 
 Run `node scripts/playtest.mjs` for seeded comparisons of idle, rushing, always-funded-services, and adaptive reserve strategies. The regression tests verify a winning adaptive policy across three seeds; these are developer playtests, not measured student success rates.
 
+The widescreen campaign desk has statistics and funding on the left, the map and live selection/action panel in the center, and recovery targets and local programs on the right. At smaller widths it reflows without hiding routes. Select a named route to use a tool, or a grove to inspect it and choose one of its connected routes. Agreement and construction countdowns refresh while the simulation runs.
+
+Choose a difficulty and press New game to start that scenario. Challenge preserves the original balance. Explorer reduces recurring costs and threats; Expert increases them and reduces funding and growth. Guided tutorial uses a gentler economy and explains each recommended action through a full population recovery. Its next-step button executes the explained action or advances up to 13 weeks to the next decision, while maintaining normal cooldowns, eligibility rules, seasonal planting, upkeep, and biological simulation. Tutorial time stays paused between decisions. Difficulty is included in local saves; older version-5 saves without a difficulty retain Challenge balance.
+
 Future project ideas live in the team page's Hope ahead and Bottle lab sections. Proposed activities must be updated with evidence before being marked complete.
 
 ## Update the impact tracker

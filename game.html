@@ -31,14 +31,25 @@
     </section>
 
     <section class="game-frame" id="game-app" aria-label="Tamarin Trails conservation game">
-      <div class="game-titlebar"><strong>Campaign — The Cost of Connection</strong><span>Challenge · seed 73</span></div>
+      <div class="game-titlebar"><strong>Campaign — The Cost of Connection</strong><div class="difficulty-controls"><label for="game-difficulty">Mode</label><select id="game-difficulty" data-difficulty><option value="tutorial">Guided tutorial</option><option value="explorer">Explorer · easier</option><option value="challenge" selected>Challenge</option><option value="expert">Expert · toughest</option></select><button class="game-button" type="button" data-new-game>New game</button></div></div>
+      <div class="game-layout">
+      <aside class="game-stats" aria-label="Campaign statistics and funding">
       <div class="game-hud" aria-label="Game statistics">
         <div class="hud-stat"><small>Funds</small><strong data-hud="funds">12,000 FC</strong></div>
         <div class="hud-stat"><small>Calendar</small><strong data-hud="calendar">Y1 • W1</strong></div>
         <div class="hud-stat"><small>Tamarins</small><strong data-hud="tamarins">5,000</strong></div>
         <div class="hud-stat"><small>Forest cover</small><strong data-hud="forest">—</strong></div>
         <div class="hud-stat"><small>Habitat capacity</small><strong data-hud="capacity">7,020</strong></div>
-        <div class="hud-controls">
+      </div>
+      <section class="finance-panel" aria-label="Budget and cash runway"><h2>Weekly budget</h2><div class="finance-grid" data-finance></div><p class="risk-message" data-risk role="status"></p><p class="fact-note" data-difficulty-copy></p></section>
+      <section class="side-panel threat-panel"><h2>Threat watch</h2><p data-threat></p></section>
+      <section class="side-panel"><h2>Funding desk</h2><p class="fact-note" data-campaign></p><div class="fundraiser-grid"><button class="fundraiser-button" type="button" data-fundraiser="presentation">School outreach<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">Science festival<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="grant">Evidence grant<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="appeal">Emergency appeal<small></small></button></div></section>
+      <section class="side-panel"><h2>Season</h2><p class="fact-note" data-season></p></section>
+      <section class="side-panel"><h2>Wildlife indices</h2><div class="wildlife-list" data-wildlife></div></section>
+      <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log></ol></section>
+      </aside>
+        <div class="game-main">
+        <div class="hud-controls" aria-label="Simulation controls">
           <button class="game-button" type="button" data-pause>Start</button>
           <button class="speed-button" type="button" data-speed="1" aria-pressed="true">1×</button>
           <button class="speed-button" type="button" data-speed="2" aria-pressed="false">2×</button>
@@ -46,11 +57,8 @@
           <button class="speed-button" type="button" data-speed="8" aria-pressed="false">8×</button><button class="game-button" type="button" data-save>Save</button>
           <button class="game-button" type="button" data-reset>Reset</button>
         </div>
-      </div>
-
-      <div class="game-layout">
-        <div class="game-main">
           <div class="mission-strip"><span><strong>Mission:</strong> recover to 10,000 tamarins by restoring and protecting their forest.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
+          <section class="tutorial-panel" data-tutorial hidden aria-label="Guided conservation tutorial"><div><span class="eyebrow">Guided tutorial</span><h2 data-tutorial-title></h2><p data-tutorial-copy></p></div><button class="game-button" type="button" data-tutorial-next>Take the next step</button></section>
           <div class="toolbelt" aria-label="Route tools">
             <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Costs, condition, survival</small></button>
             <button class="tool-button" type="button" data-tool="agreement" aria-pressed="false">Negotiate<small>600 FC · 12 weeks · +9/week</small></button>
@@ -58,6 +66,11 @@
             <button class="tool-button" type="button" data-tool="restore" aria-pressed="false">Plant cover<small>1,200 FC · 4 years · +16/week</small></button>
             <button class="tool-button" type="button" data-tool="repair" aria-pressed="false">Repair & replant<small>500 FC · restore condition</small></button>
           </div>
+          <section class="selection-panel" data-selection-panel aria-label="Selected area and action feedback">
+            <div class="selection-heading"><h2 data-inspector-title>Choose a route or forest grove</h2><span data-selected-tool>Inspect</span></div>
+            <div class="game-message" data-game-message role="status" aria-live="polite">The simulation is paused. Choose a tool, then a named route on the map.</div>
+            <dl class="selection-status" data-inspector-status></dl><p class="inspector-copy" data-inspector>Click a route to see its land agreement, bridge, and planting status. Click a grove to inspect its population and connected routes.</p><div class="selection-routes" data-inspector-routes></div>
+          </section>
           <div class="map-scroll">
             <div class="map-wrap">
               <div class="game-map" data-game-map aria-label="Irregular forest landscape with tree bridges and planting areas"></div>
@@ -71,13 +84,11 @@
             <span class="legend-item"><span class="legend-swatch growing"></span>Restoration</span>
             <span class="legend-item">⌂ Permission needed</span>
           </div>
-          <section class="finance-panel" aria-label="Budget and cash runway"><h2>Every week counts.</h2><div class="finance-grid" data-finance></div><p class="risk-message" data-risk role="status"></p><p class="fact-note">Weekly bills include 105 FC base operations, 9 per land agreement, 15 per bridge, 16 per planting, plus enabled programs. A cash shortfall stops construction and growth, erodes trust, and damages habitat.</p></section>
           <section class="finance-panel"><h2>Annual accounts & population</h2><div class="accounts-scroll"><table class="campaign-table"><thead><tr><th>Year</th><th>Income</th><th>Spending</th><th>Closing FC</th><th>Tamarins</th></tr></thead><tbody data-history></tbody></table></div></section>
         </div>
 
         <aside class="game-sidebar" aria-label="Campaign management">
           <section class="side-panel population-panel"><h2>Bring the population back</h2><label for="population-progress">Recovery toward 10,000 tamarins</label><progress id="population-progress" data-population-progress max="10000" value="5000">5,000 of 10,000</progress><div class="population-scale"><span>Below 1,000: game over</span><span>10,000: recovered</span></div><p data-population-change></p><ul class="objectives"><li data-objective="population"></li><li data-objective="network"></li><li data-objective="forest"></li><li data-objective="health"></li><li data-objective="community"></li><li data-objective="stability"></li></ul><p class="fact-note">Population is the win condition. These habitat measures explain what supports it. Crossing animations simply show a bridge in use.</p></section>
-          <section class="side-panel threat-panel"><h2>Threat watch</h2><p data-threat></p><p class="fact-note">Yellow fever kills tamarins. Fire and construction destroy habitat and nearby plantings. Damage lasts beyond the event: recovery needs healthy, expanding forest.</p></section>
           <section class="side-panel"><h2>Local programs</h2><p class="fact-note">Each team has a setup cost, minimum commitment, fixed run, and turnaround period. Timers show when it becomes available again.</p>
             <button class="program-button" type="button" data-service="outreach" aria-pressed="false">Community outreach · 45 FC/week<small>Builds trust; unlocks agreements and recurring donors.</small></button>
             <button class="program-button" type="button" data-service="monitoring" aria-pressed="false">Field monitoring · 32 FC/week<small>Builds grant evidence and records crossing use.</small></button>
@@ -85,15 +96,8 @@
             <button class="program-button" type="button" data-service="health" aria-pressed="false">Wildlife veterinary team · 38 FC/week<small>Specialists gradually vaccinate tamarins against yellow fever.</small></button>
             <button class="program-button" type="button" data-service="fireWatch" aria-pressed="false">Fire preparedness · 24 FC/week<small>Reduces fire losses while the response team is funded.</small></button>
           </section>
-          <section class="side-panel"><h2>Funding desk</h2><p class="fact-note" data-campaign></p><div class="fundraiser-grid">
-            <button class="fundraiser-button" type="button" data-fundraiser="presentation">School outreach<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">Science festival<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="grant">Evidence grant<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="appeal">Emergency appeal<small></small></button>
-          </div><p class="fact-note">Cooldowns begin after completion. Grants need 20 evidence and 45 trust; the final half waits for monitoring and reporting. Emergency appeals open below 1,000 FC.</p></section>
-          <section class="side-panel"><h2>Season & field notebook</h2><p class="fact-note" data-season></p><h3 data-inspector-title>Choose your first route</h3><p class="inspector-copy" data-inspector>Base operations cost 105 FC every week before outreach or projects. Secure funding early. Route labels show construction prices; inspect them for recurring costs.</p></section>
-          <section class="side-panel"><h2>Wildlife indices</h2><div class="wildlife-list" data-wildlife></div></section>
-          <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log></ol></section>
         </aside>
       </div>
-      <div class="game-message" data-game-message role="status">The simulation is paused. Press Start when you are ready.</div>
     </section>
 
     <section class="section compact shell"><div class="split"><div><p class="eyebrow">Survival guide</p><h2>More forest. Fewer losses. A future for tamarins.</h2><ol class="steps"><li><div><strong>Fund the people first</strong><p>Outreach builds trust; monitoring creates grant evidence. Each program has its own commitments and rest periods. A grant takes time and requires a report before its final payment.</p></div></li><li><div><strong>Bridge, then grow</strong><p>Negotiate with landowners and build a bridge before planting nearby. Young trees gradually widen into forest corridors over four years. More cover provides space for a larger population; crossings alone do not create habitat.</p></div></li><li><div><strong>Prepare before trouble arrives</strong><p>Specialist veterinary teams gradually vaccinate tamarins. Paid fire teams reduce fire damage; outreach softens construction pressure. Nursery care reaches only two planting areas at once. Watch alerts and budget for each response.</p></div></li><li><div><strong>Keep habitat healthy</strong><p>Unmanaged forest shrinks. Hungry, isolated populations decline, especially when bills go unpaid. Damaged bridges close below 45% condition; damaged trees need replanting. Mature corridors help the surrounding forest recover.</p></div></li></ol></div><aside><div class="note-card"><h3>The conservation goal</h3><p>Start with 5,000 tamarins. Win at 10,000. Below 1,000, the campaign ends. Running out of money does not immediately end play—but unpaid care accelerates habitat damage and population loss.</p></div><div class="note-card"><h3>Read your landscape</h3><p>Inspect a grove for its population, health, habitat capacity, and vaccination coverage. Burned or cleared groves shrink and lose trees. Green cover along planted routes expands as seedlings grow.</p></div><div class="note-card"><h3>Grounded in field practice</h3><p><a href="sources.html#game-threats">Yellow fever and fragmented habitat are real threats</a>. <a href="sources.html#game-season">Restoration</a> and <a href="sources.html#game-funding">grant reporting</a> take time. Event schedules, population targets, costs, and biological rates are invented for this game—not predictions or field measurements.</p></div></aside></div></section>

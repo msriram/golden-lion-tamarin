@@ -1,4 +1,12 @@
 export const TREE_MATURITY_WEEKS = 208;
+export const DIFFICULTIES = {
+  tutorial:{label:'Guided tutorial',operations:.55,income:1.4,threat:.4,growth:1.4,description:'Step-by-step guidance, 45% lower weekly bills, 40% higher funding awards, gentler threats, and faster population recovery.'},
+  explorer:{label:'Explorer',operations:.75,income:1.15,threat:.7,growth:1.15,description:'25% lower weekly bills, 15% higher funding awards, and gentler threats. Make your own conservation decisions.'},
+  challenge:{label:'Challenge',operations:1,income:1,threat:1,growth:1,description:'The original challenging economy and threats. Balance recurring costs, slow restoration, and conservation setbacks.'},
+  expert:{label:'Expert',operations:1.15,income:.9,threat:1.3,growth:.9,description:'15% higher weekly bills, 10% lower funding awards, stronger threats, and slower population recovery.'}
+};
+export function getDifficulty(state){return DIFFICULTIES[state.difficulty]||DIFFICULTIES.challenge;}
+export function fundingAward(state,id){return Math.round(FUNDRAISERS[id].payout*getDifficulty(state).income);}
 export const PATCHES = [
   { id:'a', name:'West reserve', x:13, y:28, population:1100 },
   { id:'b', name:'Hill grove', x:44, y:20, population:950 },
@@ -53,9 +61,9 @@ function pay(state,cost,category) {
   transaction(state,-cost,category);
   return true;
 }
-export function createInitialState(seed=73) {
+export function createInitialState(seed=73,difficulty='challenge') {
   return {
-    version:5,rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
+    version:5,difficulty:DIFFICULTIES[difficulty]?difficulty:'challenge',rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
     balanceFC:12000,previousYearEndBalanceFC:12000,yearlyIncomeFC:0,yearlyExpensesFC:0,
     decliningBalanceYears:0,shortfallWeeks:0,sustainableYears:0,awareness:38,evidence:0,
     patches:PATCHES.map(patch=>({...patch,health:78,vaccinated:0,populationRemainder:0,lastAdversity:null})),
@@ -79,10 +87,11 @@ export function reachable(state,start,matureOnly=false) {
   return seen;
 }
 export function weeklyCost(state) {
-  return 105+state.links.filter(link=>link.agreement).length*9+state.links.filter(link=>link.built).length*15+state.links.filter(link=>link.planted).length*16+Object.entries(SERVICES).reduce((sum,[name,cost])=>sum+(state.services[name]?cost:0),0);
+  const base=105+state.links.filter(link=>link.agreement).length*9+state.links.filter(link=>link.built).length*15+state.links.filter(link=>link.planted).length*16+Object.entries(SERVICES).reduce((sum,[name,cost])=>sum+(state.services[name]?cost:0),0);
+  return Math.round(base*getDifficulty(state).operations);
 }
 export function weeklySupport(state) {
-  return Math.floor(Math.max(0,state.awareness-35)*1.4+(state.awareness>=65?state.links.filter(matureLink).length*35:0));
+  return Math.floor((Math.max(0,state.awareness-35)*1.4+(state.awareness>=65?state.links.filter(matureLink).length*35:0))*getDifficulty(state).income);
 }
 export function corridorGrowth(link) {
   return link.planted?Math.min(1,link.age/TREE_MATURITY_WEEKS)*link.survival/100:0;
@@ -182,7 +191,7 @@ function damageLandscape(state,type,patchId) {
   const before=state.patches.reduce((sum,entry)=>sum+entry.population,0);
   const paid=name=>state.lastFunded&&state.services[name];
   const nurseryAreas=paid('nursery')?state.links.filter(link=>link.planted).sort((first,second)=>first.survival-second.survival).slice(0,2):[];
-  const severity=.85+random(state)*.3;
+  const severity=(.85+random(state)*.3)*getDifficulty(state).threat;
   const affected=type==='yellow-fever'?state.patches.filter(entry=>entry.id===patch.id||entry.id===state.patches[(state.patches.indexOf(patch)+1)%6].id):type==='drought'?state.patches:[patch];
   for(const area of affected){
     const loss=type==='yellow-fever'?.35*(1-area.vaccinated*.9):type==='wildfire'?(paid('fireWatch')?.045:.18):type==='construction'?(paid('outreach')?.015:.07):type==='drought'?.025:.01;
@@ -205,7 +214,7 @@ export function applyAdversity(oldState,type,patchId) {
 function updatePopulation(state,funded) {
   for(const patch of state.patches){
     const capacity=habitatCapacity(state,patch),connected=reachable(state,patch.id).size;
-    const birthRate=funded&&patch.health>=50?.0045*Math.max(0,1-patch.population/Math.max(1,capacity))*(connected>1?1:.55):0;
+    const birthRate=funded&&patch.health>=50?.0045*getDifficulty(state).growth*Math.max(0,1-patch.population/Math.max(1,capacity))*(connected>1?1:.55):0;
     const deathRate=Math.min(.06,.00035+(connected===1?.00035:0)+Math.max(0,65-patch.health)*.000025+(funded?0:.004)+Math.max(0,patch.population/Math.max(1,capacity)-1)*.006);
     const change=patch.population*(birthRate-deathRate)+patch.populationRemainder;
     const whole=Math.trunc(change);patch.population=Math.max(0,patch.population+whole);patch.populationRemainder=change-whole;
@@ -227,13 +236,13 @@ export function simulateOneWeek(oldState) {
     const config=FUNDRAISERS[campaign.id];
     if(campaign.id==='grant'&&campaign.firstPaid){
       if(state.reportWork-campaign.reportBaseline<4){campaign.due=state.totalWeeks+1;continue;}
-      transaction(state,config.payout/2,'Evidence grant final installment');campaign.completed=true;
+      transaction(state,fundingAward(state,campaign.id)/2,'Evidence grant final installment');campaign.completed=true;
       state.cooldowns.grant=state.totalWeeks+config.cooldown;
       event(state,'Grant report accepted. Final installment received; renewal cooldown begins.','income');continue;
     }
     campaign.completed=true;
     const approved=campaign.id!=='grant'||(state.evidence>=20&&state.awareness>=45);
-    const payout=approved?Math.round(config.payout*(campaign.id==='grant' ? .5 : campaign.id==='appeal'?1:(.7+state.awareness/200)*(.85+random(state)*.3))):0;
+    const payout=approved?Math.round(fundingAward(state,campaign.id)*(campaign.id==='grant' ? .5 : campaign.id==='appeal'?1:(.7+state.awareness/200)*(.85+random(state)*.3))):0;
     if(campaign.id==='grant'&&approved){campaign.firstPaid=true;campaign.completed=false;campaign.reportBaseline=state.reportWork;campaign.due=state.totalWeeks+13;}
     else state.cooldowns[campaign.id]=state.totalWeeks+config.cooldown;
     transaction(state,payout,config.label);
