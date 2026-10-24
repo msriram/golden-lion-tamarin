@@ -1,11 +1,11 @@
 export const TREE_MATURITY_WEEKS = 208;
 export const PATCHES = [
-  { id:'a', name:'West reserve', x:13, y:28, population:6 },
-  { id:'b', name:'Hill grove', x:44, y:20, population:6 },
-  { id:'c', name:'Coastal forest', x:81, y:28, population:6 },
-  { id:'d', name:'River refuge', x:17, y:70, population:6 },
-  { id:'e', name:'Farm woodland', x:48, y:65, population:0 },
-  { id:'f', name:'East sanctuary', x:84, y:74, population:0 }
+  { id:'a', name:'West reserve', x:13, y:28, population:1100 },
+  { id:'b', name:'Hill grove', x:44, y:20, population:950 },
+  { id:'c', name:'Coastal forest', x:81, y:28, population:1000 },
+  { id:'d', name:'River refuge', x:17, y:70, population:950 },
+  { id:'e', name:'Farm woodland', x:48, y:65, population:550 },
+  { id:'f', name:'East sanctuary', x:84, y:74, population:450 }
 ];
 export const LINKS = [
   { id:'ab', from:'a', to:'b', name:'Ridge route', cost:2100 },
@@ -23,11 +23,13 @@ export const FUNDRAISERS = {
   grant:{ label:'Evidence grant', cost:350, duration:16, payout:9000, cooldown:52 },
   appeal:{ label:'Emergency appeal', cost:0, duration:6, payout:650, cooldown:104 }
 };
-export const SERVICES = { outreach:45, monitoring:32, nursery:40 };
+export const SERVICES = { outreach:45, monitoring:32, nursery:40, health:38, fireWatch:24 };
 export const PROGRAMS = {
   outreach: { label:'Community outreach', setup:100, duration:12, cooldown:8, commitment:6, limit:'12-week campaign; 8 weeks for follow-up and community availability.' },
   monitoring: { label:'Field monitoring', setup:80, duration:13, cooldown:4, commitment:8, limit:'13-week survey; 4 weeks for equipment and data preparation.' },
-  nursery: { label:'Nursery care', setup:120, duration:26, cooldown:4, commitment:13, limit:'26-week contract; capacity for two planting areas; 4-week restocking.' }
+  nursery: { label:'Nursery care', setup:120, duration:26, cooldown:4, commitment:13, limit:'26-week contract; capacity for two planting areas; 4-week restocking.' },
+  health: { label:'Wildlife veterinary team', setup:220, duration:26, cooldown:13, commitment:13, limit:'26-week specialist visit; gradually vaccinates surviving tamarins; 13-week turnaround. Protection stays after the visit.' },
+  fireWatch: { label:'Fire preparedness', setup:120, duration:13, cooldown:8, commitment:8, limit:'13-week patrol and response team; reduces fire damage while paid; 8-week turnaround.' }
 };
 export function plantingSeason(state) { return state.totalWeeks % 52 < 22; }
 const clone = state => structuredClone(state);
@@ -53,13 +55,14 @@ function pay(state,cost,category) {
 }
 export function createInitialState(seed=73) {
   return {
-    version:4,rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
+    version:5,rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
     balanceFC:12000,previousYearEndBalanceFC:12000,yearlyIncomeFC:0,yearlyExpensesFC:0,
     decliningBalanceYears:0,shortfallWeeks:0,sustainableYears:0,awareness:38,evidence:0,
-    patches:PATCHES.map(patch=>({...patch,health:78})),
+    patches:PATCHES.map(patch=>({...patch,health:78,vaccinated:0,populationRemainder:0,lastAdversity:null})),
     links:LINKS.map(link=>({...link,agreement:false,agreementDue:null,bridgeDue:null,built:false,condition:100,planted:false,age:0,survival:100,crossings:0})),
-    services:{outreach:false,monitoring:false,nursery:false},programTimers:{},reportWork:0,fundraisers:[],cooldowns:{},
-    annualReports:[],ledger:[],events:[],eventCounter:0,crossingCount:0,monkeyCount:24,
+    services:{outreach:false,monitoring:false,nursery:false,health:false,fireWatch:false},programTimers:{},reportWork:0,fundraisers:[],cooldowns:{},
+    annualReports:[],ledger:[],events:[],eventCounter:0,crossingCount:0,monkeyCount:5000,
+    lastFunded:true,adversityHistory:[],nextAdversity:{type:'yellow-fever',week:78,patchId:'a'},
     wildlife:{canopy:100,ground:100,birds:100,amphibians:100,pollinators:100}
   };
 }
@@ -81,13 +84,21 @@ export function weeklyCost(state) {
 export function weeklySupport(state) {
   return Math.floor(Math.max(0,state.awareness-35)*1.4+(state.awareness>=65?state.links.filter(matureLink).length*35:0));
 }
+export function corridorGrowth(link) {
+  return link.planted?Math.min(1,link.age/TREE_MATURITY_WEEKS)*link.survival/100:0;
+}
+export function habitatCapacity(state,patch) {
+  const restored=state.links.filter(link=>link.from===patch.id||link.to===patch.id).reduce((sum,link)=>sum+corridorGrowth(link),0);
+  return Math.round((1500+restored*1500)*patch.health/100);
+}
 export function getMetrics(state) {
   const largest=Math.max(...state.patches.map(patch=>reachable(state,patch.id).size));
   const mature=state.links.filter(matureLink).length;
   const cost=weeklyCost(state),support=weeklySupport(state);
   const population=state.patches.reduce((sum,patch)=>sum+patch.population,0);
   return {year:Math.floor(state.totalWeeks/52)+1,week:state.totalWeeks%52+1,largest,mature,
-    restored:state.links.filter(link=>link.planted).length,forestPercent:32+mature*5,
+    restored:state.links.filter(link=>link.planted).length,forestPercent:Math.round(state.patches.reduce((sum,patch)=>sum+patch.health,0)/6/78*32+state.links.reduce((sum,link)=>sum+corridorGrowth(link)*5,0)),
+    capacity:state.patches.reduce((sum,patch)=>sum+habitatCapacity(state,patch),0),
     health:Math.round(state.patches.reduce((sum,patch)=>sum+patch.health,0)/6),population,
     families:state.patches.filter(patch=>patch.population>=4).length,
     cost,support,burn:cost-support,runway:cost>support?Math.floor(state.balanceFC/(cost-support)):Infinity};
@@ -158,26 +169,55 @@ export function startFundraiser(oldState,id) {
   return result(state,true,`${config.label} started. Bills continue during preparation.`);
 }
 function settleYear(state) {
-  for(const patch of state.patches) {
-    const connected=reachable(state,patch.id).size;
-    const donor=state.patches.find(other=>other.id!==patch.id&&reachable(state,patch.id).has(other.id)&&other.population>=8);
-    if(patch.population===0&&connected>=3&&donor) {
-      donor.population-=4;patch.population=4;event(state,`Four dispersers moved from ${donor.name} to ${patch.name}.`,'wildlife');
-    } else if(patch.population>0) {
-      const births=patch.health>=65&&connected>=2&&random(state)>.25?2:0;
-      const losses=patch.health<45?2:random(state)<.3?1:0;
-      patch.population=Math.max(0,Math.min(10,patch.population+births-losses));
-    }
-  }
   const metrics=getMetrics(state),stable=state.balanceFC>=state.previousYearEndBalanceFC;
   state.decliningBalanceYears=stable?0:state.decliningBalanceYears+1;
-  const eligible=state.totalWeeks>=416&&metrics.largest>=5&&metrics.mature>=4&&metrics.population>=32&&metrics.families>=4&&metrics.health>=70&&state.awareness>=65&&stable&&state.shortfallWeeks===0&&state.crossingCount>=20;
-  state.sustainableYears=eligible?state.sustainableYears+1:0;
-  state.annualReports.push({year:state.totalWeeks/52,opening:state.previousYearEndBalanceFC,income:state.yearlyIncomeFC,expenses:state.yearlyExpensesFC,closing:state.balanceFC,population:metrics.population,health:metrics.health,mature:metrics.mature,sustainable:eligible});
+  state.annualReports.push({year:state.totalWeeks/52,opening:state.previousYearEndBalanceFC,income:state.yearlyIncomeFC,expenses:state.yearlyExpensesFC,closing:state.balanceFC,population:metrics.population,health:metrics.health,mature:metrics.mature});
   state.previousYearEndBalanceFC=state.balanceFC;state.yearlyIncomeFC=0;state.yearlyExpensesFC=0;
-  event(state,`Year ${state.totalWeeks/52}: ${Math.round(state.balanceFC)} FC, ${metrics.population} tamarins. Stability ${state.sustainableYears}/3.`,'goal');
-  if(state.sustainableYears>=3)state.status='won';
-  else if(state.decliningBalanceYears>=10)state.status='lost-funding';
+  event(state,`Year ${state.totalWeeks/52}: ${Math.round(state.balanceFC)} FC, ${metrics.population.toLocaleString()} tamarins; habitat capacity ${metrics.capacity.toLocaleString()}.`,'goal');
+}
+export const ADVERSITIES = { 'yellow-fever':'Yellow fever',wildfire:'Wildfire',construction:'Construction pressure',drought:'Drought',storm:'Severe storm' };
+function damageLandscape(state,type,patchId) {
+  const patch=state.patches.find(entry=>entry.id===patchId);
+  if(!patch||!ADVERSITIES[type])return;
+  const before=state.patches.reduce((sum,entry)=>sum+entry.population,0);
+  const paid=name=>state.lastFunded&&state.services[name];
+  const nurseryAreas=paid('nursery')?state.links.filter(link=>link.planted).sort((first,second)=>first.survival-second.survival).slice(0,2):[];
+  const severity=.85+random(state)*.3;
+  const affected=type==='yellow-fever'?state.patches.filter(entry=>entry.id===patch.id||entry.id===state.patches[(state.patches.indexOf(patch)+1)%6].id):type==='drought'?state.patches:[patch];
+  for(const area of affected){
+    const loss=type==='yellow-fever'?.35*(1-area.vaccinated*.9):type==='wildfire'?(paid('fireWatch')?.045:.18):type==='construction'?(paid('outreach')?.015:.07):type==='drought'?.025:.01;
+    area.population=Math.max(0,area.population-Math.ceil(area.population*loss*severity));
+    const damage=type==='wildfire'?(paid('fireWatch')?7:25):type==='construction'?(paid('outreach')?5:18):type==='drought'?8:type==='storm'?5:0;
+    area.health=bound(area.health-damage*severity);area.lastAdversity={type,week:state.totalWeeks};
+  }
+  for(const link of state.links.filter(entry=>affected.some(area=>area.id===entry.from||area.id===entry.to))){
+    if(link.built&&['wildfire','construction','storm'].includes(type))link.condition=bound(link.condition-(type==='storm'?30:paid('fireWatch')&&type==='wildfire'?8:20)*severity);
+    if(link.planted&&type!=='yellow-fever')link.survival=bound(link.survival-(type==='wildfire'?paid('fireWatch')?8:32:type==='construction'?paid('outreach')?6:24:nurseryAreas.includes(link)?5:16)*severity);
+  }
+  const deaths=before-state.patches.reduce((sum,area)=>sum+area.population,0);
+  state.adversityHistory.push({type,patchId,week:state.totalWeeks,deaths});
+  event(state,`${ADVERSITIES[type]}: ${patch.name}${affected.length>1?' and nearby habitat':''}. ${deaths.toLocaleString()} tamarins lost.${type==='yellow-fever'?' Vaccination reduces disease losses.':type==='wildfire'?' Canopy and nearby plantings damaged.':type==='construction'?' Habitat cleared; community negotiations reduce the impact.':' Inspect habitat and route condition.'}`,'warning');
+}
+export function applyAdversity(oldState,type,patchId) {
+  if(oldState.status!=='playing')return oldState;
+  const state=clone(oldState);damageLandscape(state,type,patchId);return state;
+}
+function updatePopulation(state,funded) {
+  for(const patch of state.patches){
+    const capacity=habitatCapacity(state,patch),connected=reachable(state,patch.id).size;
+    const birthRate=funded&&patch.health>=50?.0045*Math.max(0,1-patch.population/Math.max(1,capacity))*(connected>1?1:.55):0;
+    const deathRate=Math.min(.06,.00035+(connected===1?.00035:0)+Math.max(0,65-patch.health)*.000025+(funded?0:.004)+Math.max(0,patch.population/Math.max(1,capacity)-1)*.006);
+    const change=patch.population*(birthRate-deathRate)+patch.populationRemainder;
+    const whole=Math.trunc(change);patch.population=Math.max(0,patch.population+whole);patch.populationRemainder=change-whole;
+    patch.vaccinated=Math.max(0,Math.min(.95,patch.vaccinated*(1-Math.max(0,birthRate))+(funded&&state.services.health?.012:0)));
+  }
+  for(const link of state.links.filter(activeLink)){
+    const from=state.patches.find(patch=>patch.id===link.from),to=state.patches.find(patch=>patch.id===link.to);
+    const difference=from.population/Math.max(1,habitatCapacity(state,from))-to.population/Math.max(1,habitatCapacity(state,to));
+    const donor=difference>0?from:to,receiver=difference>0?to:from;
+    const migrants=Math.min(donor.population,Math.floor(Math.abs(difference)*donor.population*.01));
+    donor.population-=migrants;receiver.population+=migrants;
+  }
 }
 export function simulateOneWeek(oldState) {
   if(oldState.paused||oldState.status!=='playing')return oldState;
@@ -201,6 +241,7 @@ export function simulateOneWeek(oldState) {
   }
   transaction(state,weeklySupport(state),'Recurring supporters');
   const funded=pay(state,weeklyCost(state),'Weekly operations');
+  state.lastFunded=funded;
   state.shortfallWeeks=funded?0:state.shortfallWeeks+1;
   if(!funded&&state.balanceFC>0)transaction(state,-state.balanceFC,'Partial operations payment');
   state.awareness=bound(state.awareness+(funded && state.services.outreach ? .95 : -.25));
@@ -213,18 +254,20 @@ export function simulateOneWeek(oldState) {
     if(link.planted){if(funded)link.age+=1;link.survival=bound(link.survival+(nurseryAreas.includes(link) ? .35 : funded ? -.015 : -1.1));}
     if(activeLink(link)&&state.totalWeeks%13===0&&state.services.monitoring&&funded&&random(state)>.35){link.crossings+=1;state.crossingCount+=1;}
   }
-  for(const patch of state.patches){const habitat=state.links.filter(link=>(link.from===patch.id||link.to===patch.id)&&matureLink(link)).length;patch.health=bound(patch.health+(funded ? habitat ? .14 : -.015 : -.7));}
-  if(state.totalWeeks%78===0){
-    const link=state.links[Math.floor(random(state)*state.links.length)],storm=random(state)>.5;
-    if(storm&&link.built)link.condition=bound(link.condition-24);
-    if(!storm){for(const patch of state.patches)patch.health=bound(patch.health-5);if(link.planted)link.survival=bound(link.survival-(nurseryAreas.includes(link)?4:16));}
-    event(state,storm?`Storm near ${link.name}. Inspect bridge condition.`:'Dry season: stressed habitat and young plantings need care.','warning');
+  for(const patch of state.patches){const habitat=state.links.filter(link=>(link.from===patch.id||link.to===patch.id)&&matureLink(link)).length;patch.health=bound(patch.health+(funded ? habitat*.16-.025+(state.services.outreach?.025:0) : -.7));}
+  if(state.totalWeeks===state.nextAdversity.week-13)event(state,`${ADVERSITIES[state.nextAdversity.type]} warning near ${PATCHES.find(patch=>patch.id===state.nextAdversity.patchId).name}: prepare within 13 weeks.`,'warning');
+  if(state.totalWeeks>=state.nextAdversity.week){
+    damageLandscape(state,state.nextAdversity.type,state.nextAdversity.patchId);
+    const sequence=['yellow-fever','construction','wildfire','drought','storm'];
+    state.nextAdversity={type:sequence[(sequence.indexOf(state.nextAdversity.type)+1)%sequence.length],week:state.totalWeeks+78+Math.floor(random(state)*52),patchId:PATCHES[Math.floor(random(state)*6)].id};
   }
+  updatePopulation(state,funded);
   const metrics=getMetrics(state);state.monkeyCount=metrics.population;
   state.wildlife={canopy:Math.round(70+metrics.health*.3+metrics.mature*3),ground:100+metrics.mature*2,birds:100+metrics.mature*4,amphibians:Math.round(65+metrics.health*.4),pollinators:100+metrics.restored*3};
   if(state.totalWeeks%52===0)settleYear(state);
-  if(state.shortfallWeeks>=26)state.status='lost-solvency';
-  if(state.patches.every(patch=>patch.population===0))state.status='lost-extinction';
+  const population=state.patches.reduce((sum,patch)=>sum+patch.population,0);
+  if(population<1000)state.status='lost-population';
+  else if(population>=10000)state.status='won';
   for(const [name,config] of Object.entries(PROGRAMS)){
     if(state.services[name]&&state.programTimers[name].endsAt<=state.totalWeeks){
       state.services[name]=false;state.programTimers[name].readyAt=state.totalWeeks+config.cooldown;

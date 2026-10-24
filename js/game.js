@@ -1,12 +1,12 @@
-import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,plantingSeason,createInitialState,applyTool,describeLink,activeLink,matureLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,matureLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
 import {terrainArtwork} from './terrain.js';
 
-const storageKey='tamarinTrailsCampaignV4';
+const storageKey='tamarinTrailsCampaignV5';
 const map=document.querySelector('[data-game-map]');
 const dialog=document.querySelector('[data-report-dialog]');
 let state=load()||createInitialState();
 let tool='inspect',timer=null,terminalShown=false;
-function load(){try{const saved=JSON.parse(localStorage.getItem(storageKey));return saved?.version===4?saved:null;}catch{return null;}}
+function load(){try{const saved=JSON.parse(localStorage.getItem(storageKey));return saved?.version===5?saved:null;}catch{return null;}}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{message('Browser storage is full. This session can continue, but could not be saved.','error');}}
 function message(copy,tone=''){const target=document.querySelector('[data-game-message]');target.textContent=copy;target.className=`game-message ${tone}`;}
 const number=value=>Math.round(value).toLocaleString();
@@ -17,8 +17,19 @@ function renderMap(){
   const svg=map.querySelector('svg');
   for(const link of state.links){
     const from=PATCHES.find(patch=>patch.id===link.from),to=PATCHES.find(patch=>patch.id===link.to);
+    if(link.planted){
+      const growth=corridorGrowth(link),cover=document.createElementNS('http://www.w3.org/2000/svg','path');
+      const middleX=(from.x+to.x)*5,middleY=(from.y+to.y)*3.3;
+      cover.setAttribute('d',`M ${from.x*10} ${from.y*6.6} Q ${middleX} ${middleY-24} ${to.x*10} ${to.y*6.6}`);
+      cover.setAttribute('stroke',link.survival<60?'#94946c':'#58864a');cover.setAttribute('stroke-width',String(5+growth*68));cover.setAttribute('stroke-linecap','round');cover.setAttribute('fill','none');cover.setAttribute('opacity',String(.2+link.survival/200));cover.classList.add('corridor-canopy');svg.append(cover);
+      for(let index=1;index<=13;index+=1){
+        const position=index/14,tree=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        tree.setAttribute('cx',String((from.x+(to.x-from.x)*position)*10));tree.setAttribute('cy',String((from.y+(to.y-from.y)*position)*6.6-8-Math.sin(position*Math.PI)*12));
+        tree.setAttribute('r',String((2+growth*9)*(index%3===0?.8:1)));tree.setAttribute('fill',link.survival<60?'#a39160':'#325b3b');tree.classList.add('corridor-tree');svg.append(tree);
+      }
+    }
     const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-    for(const [key,value] of Object.entries({x1:from.x*10,y1:from.y*6.6,x2:to.x*10,y2:to.y*6.6,stroke:matureLink(link)?'#49763b':activeLink(link)?'#a5732c':'#8d8e6d','stroke-width':matureLink(link)?26:link.built?8:3,'stroke-dasharray':link.built?'0':'8 9'}))line.setAttribute(key,value);
+    for(const [key,value] of Object.entries({x1:from.x*10,y1:from.y*6.6,x2:to.x*10,y2:to.y*6.6,stroke:activeLink(link)?'#a5732c':link.built?'#8f574a':'#8d8e6d','stroke-width':link.built?7:3,'stroke-dasharray':link.built?'0':'8 9'}))line.setAttribute(key,value);
     svg.append(line);
     const button=document.createElement('button');button.type='button';button.className=`route-marker ${activeLink(link)?'active':''} ${link.condition<45?'broken':''}`;
     button.style.cssText=`left:${(from.x+to.x)/2}%;top:${(from.y+to.y)/2}%`;
@@ -27,10 +38,11 @@ function renderMap(){
     button.addEventListener('click',()=>{document.querySelector('[data-inspector-title]').textContent=link.name;handle(applyTool(state,tool,link.id));document.querySelector('[data-inspector]').textContent=describeLink(state.links.find(entry=>entry.id===link.id));});map.append(button);
   }
   for(const patch of state.patches){
-    const button=document.createElement('button');button.type='button';button.className='terrain-area forest';button.style.cssText=`left:${patch.x}%;top:${patch.y}%;width:19%;height:27%;opacity:${.55+patch.health/220}`;
+    const recent=patch.lastAdversity&&state.totalWeeks-patch.lastAdversity.week<26;
+    const button=document.createElement('button');button.type='button';button.className=`terrain-area forest ${patch.health<40?'degraded':''} ${recent?`hit-${patch.lastAdversity.type}`:''}`;button.style.cssText=`left:${patch.x}%;top:${patch.y}%;width:${11+patch.health*.1}%;height:${16+patch.health*.14}%;opacity:${.55+patch.health/220}`;
     button.setAttribute('aria-label',`${patch.name}: ${patch.population} tamarins, health ${Math.round(patch.health)}%.`);
-    button.innerHTML=`<span class="area-name">${patch.name} · ${patch.population}</span>`+Array.from({length:9},(_,index)=>`<i class="terrain-tree" style="left:${12+index*31%65}%;top:${8+index*23%62}%"></i>`).join('');
-    button.addEventListener('click',()=>{document.querySelector('[data-inspector-title]').textContent=patch.name;document.querySelector('[data-inspector]').textContent=`${patch.population} tamarins. Habitat health ${Math.round(patch.health)}%. Select a route between groves to negotiate, build, plant, or repair.`;});map.append(button);
+    button.innerHTML=`<span class="area-name">${patch.name} · ${number(patch.population)}</span>`+Array.from({length:Math.max(1,Math.ceil(patch.health/10))},(_,index)=>`<i class="terrain-tree" style="left:${12+index*31%65}%;top:${8+index*23%62}%"></i>`).join('')+(recent?`<span class="hazard-badge">${ADVERSITIES[patch.lastAdversity.type]}</span>`:'');
+    button.addEventListener('click',()=>{document.querySelector('[data-inspector-title]').textContent=patch.name;document.querySelector('[data-inspector]').textContent=`${number(patch.population)} tamarins. Habitat health ${Math.round(patch.health)}%. Capacity ${number(habitatCapacity(state,patch))}; ${Math.round(patch.vaccinated*100)}% vaccinated. Plant near bridges to expand habitat; maintain care to prevent decline.`;});map.append(button);
   }
   const token=document.querySelector('[data-tamarin]');
   const route=state.links.find(activeLink);
@@ -40,7 +52,7 @@ function renderMap(){
 }
 function renderFinance(metrics){
   document.querySelector('[data-finance]').innerHTML=`<div><span>Weekly bills</span><strong>${number(metrics.cost)} FC</strong></div><div><span>Recurring support</span><strong>+${number(metrics.support)} FC</strong></div><div><span>Net weekly burn</span><strong>${number(metrics.burn)} FC</strong></div><div class="${metrics.runway<20?'critical':''}"><span>Cash runway</span><strong>${metrics.runway===Infinity?'Covered':`${metrics.runway} weeks`}</strong></div><div><span>Community trust</span><strong>${Math.floor(state.awareness)}/100</strong></div><div><span>Monitoring evidence</span><strong>${Math.floor(state.evidence)}/100</strong></div>`;
-  document.querySelector('[data-risk]').textContent=state.shortfallWeeks?`Unpaid operations: ${state.shortfallWeeks}/26 weeks. Bridge condition and habitat are deteriorating. Raise funds immediately.`:metrics.runway<20?`Only ${metrics.runway} weeks of cash. Upcoming grants are not cash in hand. Delay expansion or fundraise now.`:`${state.decliningBalanceYears}/10 declining years. Maintain a cash reserve for storms and grant delays.`;
+  document.querySelector('[data-risk]').textContent=state.shortfallWeeks?`Unpaid operations: ${state.shortfallWeeks} weeks. Habitat is degrading and tamarins are dying. Raise funds immediately.`:metrics.runway<20?`Only ${metrics.runway} weeks of cash. Upcoming grants are not cash in hand. Delay expansion or fundraise now.`:'Maintain a reserve for disease prevention, fire response, and grant delays.';
   for(const button of document.querySelectorAll('[data-service]')){
     const name=button.dataset.service,config=PROGRAMS[name],timer=state.programTimers[name],active=state.services[name];
     const rest=Math.max(0,(timer?.readyAt||0)-state.totalWeeks),commit=Math.max(0,(timer?.commitUntil||0)-state.totalWeeks);
@@ -56,13 +68,17 @@ function renderFinance(metrics){
     button.querySelector('small').textContent=`${wait?`Cooldown: ${wait} weeks remaining. `:''}${config.cost} FC · ${config.duration} weeks · ${id==='grant'?'4,500 + 4,500 FC':`base ${config.payout} FC`} · ${config.cooldown}-week rest after completion`;
   }
   document.querySelector('[data-season]').textContent=plantingSeason(state)?`Wet-season planting window: ${22-state.totalWeeks%52} weeks remaining (October–February).`:`Dry season: planting opens in ${52-state.totalWeeks%52} weeks. Maintain existing seedlings now.`;
-  document.querySelector('[data-history]').innerHTML=state.annualReports.slice(-5).reverse().map(report=>`<tr><td>${report.year}</td><td>${number(report.income)}</td><td>${number(report.expenses)}</td><td>${number(report.closing)}</td><td>${report.sustainable?'Stable':'Rebuilding'}</td></tr>`).join('')||'<tr><td colspan="5">Your first report arrives after 52 weeks.</td></tr>';
+  const warning=state.nextAdversity.week-state.totalWeeks;
+  document.querySelector('[data-threat]').textContent=warning<=26?`${ADVERSITIES[state.nextAdversity.type]} risk near ${PATCHES.find(patch=>patch.id===state.nextAdversity.patchId).name}. Response window: ${warning} weeks. Prepare local teams and cash reserves.`:'No immediate threat alert. Disease, construction, fire, drought, and storms can set back recovery. Prevention takes time.';
+  document.querySelector('[data-history]').innerHTML=state.annualReports.slice(-5).reverse().map(report=>`<tr><td>${report.year}</td><td>${number(report.income)}</td><td>${number(report.expenses)}</td><td>${number(report.closing)}</td><td>${number(report.population)}</td></tr>`).join('')||'<tr><td colspan="5">Your first report arrives after 52 weeks.</td></tr>';
 }
 function render(){
   const metrics=getMetrics(state);
-  for(const [name,value] of Object.entries({funds:`${number(state.balanceFC)} FC`,calendar:`Y${metrics.year} · W${metrics.week}`,tamarins:metrics.population,forest:`${metrics.forestPercent}%`,crossings:state.crossingCount}))document.querySelector(`[data-hud="${name}"]`).textContent=value;
-  const goals={network:metrics.largest>=5,forest:metrics.mature>=4,population:metrics.population>=32&&metrics.families>=4,health:metrics.health>=70,community:state.awareness>=65,stability:state.sustainableYears>=3};
-  const labels={network:`Connected forest: ${metrics.largest}/5 groves`,forest:`Mature corridors: ${metrics.mature}/4`,population:`Tamarins: ${metrics.population}/32 · families ${metrics.families}/4`,health:`Habitat health: ${metrics.health}/70`,community:`Community trust: ${Math.floor(state.awareness)}/65`,stability:`Stable years after Year 8: ${state.sustainableYears}/3`};
+  for(const [name,value] of Object.entries({funds:`${number(state.balanceFC)} FC`,calendar:`Y${metrics.year} · W${metrics.week}`,tamarins:number(metrics.population),forest:`${metrics.forestPercent}%`,capacity:number(metrics.capacity)}))document.querySelector(`[data-hud="${name}"]`).textContent=value;
+  const goals={network:metrics.largest===6,forest:metrics.mature>=5,population:metrics.population>=10000,health:metrics.health>=70,community:state.awareness>=65,stability:metrics.capacity>=10000};
+  const labels={network:`Connected habitat: ${metrics.largest}/6 groves`,forest:`Mature corridors: ${metrics.mature}`,population:`Population: ${number(metrics.population)} / 10,000`,health:`Habitat health: ${metrics.health}%`,community:`Community trust: ${Math.floor(state.awareness)}%`,stability:`Habitat capacity: ${number(metrics.capacity)}`};
+  const progress=document.querySelector('[data-population-progress]');progress.value=metrics.population;
+  document.querySelector('[data-population-change]').textContent=`${metrics.population>=5000?'+':''}${number(metrics.population-5000)} since the campaign began`;
   for(const [id,done] of Object.entries(goals)){const element=document.querySelector(`[data-objective="${id}"]`);element.textContent=labels[id];element.classList.toggle('complete',done);}
   document.querySelector('[data-route-status]').textContent=`${metrics.largest}/6 connected`;
   document.querySelector('[data-pause]').textContent=state.paused?'Start':'Pause';document.querySelector('[data-pause]').disabled=state.status!=='playing';
@@ -75,11 +91,11 @@ function render(){
 }
 function report(annual=false){
   const metrics=getMetrics(state),won=state.status==='won',ended=state.status!=='playing';
-  const reasons={'lost-solvency':'Operations went unpaid for 26 consecutive weeks. Without wages, upkeep, and local support, the program could no longer function.','lost-funding':'Closing funds declined for ten consecutive years. The funding plan never became sustainable.','lost-extinction':'The last family disappeared from this fictional local landscape. This does not mean global species extinction.'};
+  const reasons={'lost-population':'The simulated population fell below 1,000. Habitat loss, disease, and gaps in care overwhelmed recovery. Reset to try a different conservation plan.'};
   document.querySelector('[data-report-stamp]').textContent=ended?won?'Recovery sustained':'Campaign ended':'Annual review';
   document.querySelector('[data-report-title]').textContent=ended?won?'A forest with a future':'The program needs a new plan':`Year ${metrics.year-1} report`;
-  document.querySelector('[data-report-copy]').textContent=ended?won?'You sustained habitat, community support, and finances for three qualifying years.':reasons[state.status]:`${state.sustainableYears}/3 stable years; ${state.decliningBalanceYears}/10 declining fund years. Compare income and bills before expanding.`;
-  for(const [name,value] of Object.entries({funds:`${number(state.balanceFC)} FC`,forest:`${metrics.forestPercent}%`,crossings:state.crossingCount,tamarins:metrics.population}))document.querySelector(`[data-report="${name}"]`).textContent=value;
+  document.querySelector('[data-report-copy]').textContent=ended?won?'The population has recovered to at least 10,000 tamarins. Bridges helped connect habitat; expanding forest and ongoing protection made recovery possible.':reasons[state.status]:`${number(metrics.population)} tamarins, ${number(metrics.population-5000)} compared with the starting population. Habitat supports about ${number(metrics.capacity)}. Plan protection and funding before expanding.`;
+  for(const [name,value] of Object.entries({funds:`${number(state.balanceFC)} FC`,forest:`${metrics.forestPercent}%`,capacity:number(metrics.capacity),tamarins:number(metrics.population)}))document.querySelector(`[data-report="${name}"]`).textContent=value;
   document.querySelector('[data-report-continue]').textContent=ended?'Close report':'Continue the campaign';document.querySelector('[data-report-reset]').hidden=!ended;
   if(!dialog.open)dialog.showModal();
 }

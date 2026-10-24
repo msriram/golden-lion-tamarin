@@ -2,11 +2,12 @@ import {createInitialState,simulateOneWeek,startFundraiser,applyTool,toggleServi
 
 export function runCampaign(seed=73,policy='careful') {
   let state=createInitialState(seed);
-  const targets=['ab','ad','be','ef'];
+  const targets=['ab','ad','be','ef','bc'];
   for(let week=0;week<1560&&state.status==='playing';week+=1){
     if(policy==='careful'||policy==='expert'){
       if(policy==='expert'){
-        const desired={outreach:state.awareness<(state.services.outreach?98:88),monitoring:state.evidence<25||state.crossingCount<24||state.fundraisers.some(entry=>entry.id==='grant'&&!entry.completed),nursery:state.links.some(link=>link.planted&&link.survival<(state.services.nursery?96:82))};
+        const threat=state.nextAdversity,untilThreat=threat.week-state.totalWeeks;
+        const desired={outreach:state.awareness<(state.services.outreach?98:88),monitoring:state.evidence<25||state.fundraisers.some(entry=>entry.id==='grant'&&!entry.completed),nursery:state.links.some(link=>link.planted&&link.survival<(state.services.nursery?96:82)),health:threat.type==='yellow-fever'&&untilThreat<=39,fireWatch:threat.type==='wildfire'&&untilThreat<=13};
         for(const [name,enabled] of Object.entries(desired))if(state.services[name]!==enabled)state=toggleService(state,name).state;
       }else{
         for(const name of ['outreach','monitoring'])if(!state.services[name])state=toggleService(state,name).state;
@@ -44,6 +45,6 @@ export function runCampaign(seed=73,policy='careful') {
 if(process.argv[1]?.endsWith('/playtest.mjs')){
   for(const policy of ['idle','rush','careful','expert'])for(const seed of [73,42,917]){
     const state=runCampaign(seed,policy);
-    console.log(JSON.stringify({policy,seed,status:state.status,weeks:state.totalWeeks,balance:state.balanceFC,...getMetrics(state),trust:Math.round(state.awareness),stability:state.sustainableYears}));
+    console.log(JSON.stringify({policy,seed,status:state.status,weeks:state.totalWeeks,balance:state.balanceFC,...getMetrics(state),trust:Math.round(state.awareness)}));
   }
 }

@@ -648,7 +648,7 @@
   transition: none;
 }
 
-.game-map { display: block; position: relative; aspect-ratio: 1000 / 660; min-width: 0; overflow: hidden; }
+.game-map { display: block; position: relative; width:100%; aspect-ratio: 1000 / 660; min-width: 0; overflow: hidden; }
 .terrain-art { position: absolute; width: 100%; height: 100%; inset: 0; }
 .terrain-caption { font: 13px "Avenir Next", sans-serif; fill: #3b5039; letter-spacing: 2px; }
 .terrain-area { position: absolute; transform: translate(-50%,-50%); cursor: pointer; border: 2px solid transparent; background: transparent; padding: 0; min-height: 44px; border-radius: 43% 57% 61% 39% / 48% 35% 65% 52%; }
@@ -691,5 +691,18 @@
 .finance-grid .critical { background:#f3d5be; }
 .risk-message { margin-top:1rem; border-left:4px solid var(--gold); padding:.7rem; font-size:.83rem; background:#f6e9c7; }
 .accounts-scroll { overflow-x:auto; }
+.population-panel { border-top:4px solid #528044; }
+.population-panel label { font-size:.8rem; }
+.population-panel progress { display:block; width:100%; height:18px; margin:.6rem 0; accent-color:#4d7841; }
+.population-scale { display:flex; justify-content:space-between; gap:.7rem; font-size:.62rem; color:#6e4a32; }
+.population-panel [data-population-change] { font-size:.78rem; }
+.threat-panel { border-left:4px solid #b96e37; }
+.threat-panel [data-threat] { font-size:.85rem; }
+.terrain-area.forest.degraded { background:#aa9773; box-shadow:inset 0 0 25px #766b49; }
+.terrain-area.forest.hit-wildfire { background:#806447; box-shadow:inset 0 0 25px #4f4335; }
+.terrain-area.hit-construction { border:3px dashed #b38e61; }
+.hazard-badge { position:absolute; top:-15px; left:50%; transform:translateX(-50%); z-index:5; background:#fff0d8; color:#75411f; border:1px solid #b68458; border-radius:3px; padding:2px 4px; font-size:clamp(.48rem,.8vw,.65rem); white-space:nowrap; }
+.corridor-canopy, .corridor-tree { pointer-events:none; }
+@media(min-width:1051px) { .game-sidebar { align-self:start; position:sticky; top:90px; max-height:calc(100dvh - 110px); overflow-y:auto; scrollbar-color:#6e8861 #f7f0dc; scrollbar-width:thin; } }
 .accounts-scroll td, .accounts-scroll th { padding:.65rem; font-size:.72rem; }
 @media(max-width:760px) { .toolbelt { grid-template-columns:repeat(2,1fr); } .route-marker { max-width:85px; font-size:.6rem; padding:3px; } .route-marker small { font-size:.5rem; } .game-map { min-height:440px; } .finance-grid { grid-template-columns:repeat(2,1fr); } }
