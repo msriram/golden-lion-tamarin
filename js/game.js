@@ -31,7 +31,18 @@ function actOnRoute(id){
 function renderInspector(){
   document.querySelector('[data-selected-tool]').textContent=`Tool: ${toolNames[tool]}`;
   const title=document.querySelector('[data-inspector-title]'),copy=document.querySelector('[data-inspector]'),status=document.querySelector('[data-inspector-status]'),routes=document.querySelector('[data-inspector-routes]');
-  status.replaceChildren();routes.replaceChildren();
+  status.replaceChildren();
+  for(const link of state.links){
+    let button=routes.querySelector(`[data-inspector-route="${link.id}"]`);
+    if(!button){
+      button=document.createElement('button');button.type='button';button.dataset.inspectorRoute=link.id;
+      button.addEventListener('click',()=>actOnRoute(link.id));routes.append(button);
+    }
+    const label=`${toolNames[tool]}: ${link.name}`;
+    if(button.textContent!==label)button.textContent=label;
+    button.setAttribute('aria-pressed',String(selection?.type==='route'&&selection.id===link.id));
+    button.disabled=state.status!=='playing';
+  }
   if(!selection){title.textContent='Choose a route or forest grove';copy.textContent='Click a named route to inspect it or use your selected tool. Click a forest grove to see its population and available routes.';return;}
   const fields=selection.type==='route'?(()=>{
     const link=state.links.find(entry=>entry.id===selection.id);title.textContent=link.name;
@@ -39,10 +50,7 @@ function renderInspector(){
     return [['Land agreement',link.agreement?'Agreement signed':link.agreementDue?`Negotiating · ${link.agreementDue-state.totalWeeks} weeks left`:'Not negotiated'],['Bridge',link.bridgeDue?`Building · ${Math.max(0,link.bridgeDue-state.totalWeeks)} weeks${link.bridgeDue<=state.totalWeeks?' · waiting for funds':' left'}`:link.built?`${activeLink(link)?'Open':'Closed'} · ${Math.round(link.condition)}% condition`:'Not built'],['Tree cover',link.planted?`${Math.round(link.age/52*10)/10} years · ${Math.round(link.survival)}% survival`:'Not planted']];
   })():(()=>{
     const patch=state.patches.find(entry=>entry.id===selection.id);title.textContent=patch.name;
-    copy.textContent=`${number(patch.population)} tamarins; habitat capacity ${number(habitatCapacity(state,patch))}. ${tool==='inspect'?'Inspect a route below for land, bridge, and planting details.':`To ${toolNames[tool].toLowerCase()}, choose one of this grove’s routes below.`}`;
-    for(const link of state.links.filter(entry=>entry.from===patch.id||entry.to===patch.id)){
-      const button=document.createElement('button');button.type='button';button.textContent=`${toolNames[tool]}: ${link.name}`;button.addEventListener('click',()=>actOnRoute(link.id));routes.append(button);
-    }
+    copy.textContent=`${number(patch.population)} tamarins; habitat capacity ${number(habitatCapacity(state,patch))}. ${tool==='inspect'?'Inspect any route below for land, bridge, and planting details.':`Choose a route below to ${toolNames[tool].toLowerCase()}.`}`;
     return [['Population',number(patch.population)],['Habitat health',`${Math.round(patch.health)}%`],['Vaccinated',`${Math.round(patch.vaccinated*100)}%`]];
   })();
   for(const [label,value] of fields){const item=document.createElement('div'),term=document.createElement('dt'),detail=document.createElement('dd');term.textContent=label;detail.textContent=value;item.append(term,detail);status.append(item);}
@@ -81,7 +89,7 @@ function renderMap(){
     button.setAttribute('aria-label',`${patch.name}: ${patch.population} tamarins, health ${Math.round(patch.health)}%.`);
     button.dataset.patch=patch.id;button.classList.toggle('selected',selection?.type==='patch'&&selection.id===patch.id);
     button.innerHTML=`<span class="area-name">${patch.name} · ${number(patch.population)}</span>`+Array.from({length:Math.max(1,Math.ceil(patch.health/10))},(_,index)=>`<i class="terrain-tree" style="left:${12+index*31%65}%;top:${8+index*23%62}%"></i>`).join('')+(recent?`<span class="hazard-badge">${ADVERSITIES[patch.lastAdversity.type]}</span>`:'');
-    button.addEventListener('click',()=>{selection={type:'patch',id:patch.id};message(`${patch.name} selected. ${tool==='inspect'?'Population and habitat details are shown below.':'Choose a connected route below to use '+toolNames[tool]+'.'}`);render();revealSelection();});map.append(button);
+    button.addEventListener('click',()=>{selection={type:'patch',id:patch.id};message(`${patch.name} selected. ${tool==='inspect'?'Population and habitat details are shown below.':'Choose a named route to use '+toolNames[tool]+'.'}`);render();revealSelection();});map.append(button);
   }
   const token=document.querySelector('[data-tamarin]');
   const route=state.links.find(activeLink);

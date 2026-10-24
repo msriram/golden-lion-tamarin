@@ -737,9 +737,10 @@
 .selection-status div { border-left:3px solid #b7c5a1; padding-left:.5rem; }
 .selection-status dt { font-size:.64rem; text-transform:uppercase; color:#586c51; }
 .selection-status dd { font-size:.78rem; font-weight:650; margin:0; }
-.selection-panel .inspector-copy { min-height:0; margin:.4rem 0 0; font-size:.78rem; }
-.selection-routes { display:flex; gap:.4rem; flex-wrap:wrap; }
-.selection-routes button { margin-top:.5rem; border:1px solid #577348; padding:.45rem; background:#eef2dc; color:#24452f; font-size:.72rem; cursor:pointer; }
+.selection-panel .inspector-copy { min-height:3.2em; margin:.4rem 0 0; font-size:.78rem; }
+.selection-routes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.4rem; margin-top:.5rem; }
+.selection-routes button { min-height:48px; border:1px solid #577348; padding:.45rem; background:#eef2dc; color:#24452f; font-size:.72rem; cursor:pointer; }
+.selection-routes button[aria-pressed="true"] { border-color:#9a671a; background:#ffe2a1; box-shadow:inset 0 0 0 1px #9a671a; }
 .route-marker.selected { outline:3px solid #d89322; outline-offset:3px; background:#ffe2a1; }
 .tutorial-target { outline:3px solid #d89322; outline-offset:2px; }
 .terrain-area.selected { border:3px solid #edb74b; }
@@ -773,6 +774,7 @@
   .game-titlebar { align-items:flex-start; flex-direction:column; }
   .game-stats .game-hud { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .selection-status { grid-template-columns:1fr; gap:.3rem; }
+  .selection-routes { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .selection-status div { display:flex; justify-content:space-between; gap:.5rem; }
   .tutorial-panel:not([hidden]) { align-items:stretch; flex-direction:column; gap:.6rem; }
   .tutorial-panel .game-button { max-width:none; }
