@@ -1,4 +1,4 @@
-import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,getDifficulty,fundingAward,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
 import {terrainArtwork} from './terrain.js';
 import {getTutorialStep,performTutorialStep} from './game-guide.js';
 
@@ -17,7 +17,21 @@ const number=value=>Math.round(value).toLocaleString();
 function handle(result){state=result.state;message(result.message,result.ok?'success':'error');save();render();}
 function revealSelection(){
   const panel=document.querySelector('[data-selection-panel]'),bounds=panel.getBoundingClientRect();
-  if(bounds.top<90||bounds.top>innerHeight-120)panel.scrollIntoView({block:'start',behavior:'instant'});
+  const barBottom=document.querySelector('[data-resource-bar]').getBoundingClientRect().bottom;
+  if(bounds.top<barBottom||bounds.top>innerHeight-120)panel.scrollIntoView({block:'start',behavior:'instant'});
+}
+function renderResources(metrics){
+  const values={funds:`${number(state.balanceFC)} FC`,trust:`${Math.floor(state.awareness)} / 100`,evidence:`${Math.floor(state.evidence)} / 100`,tamarins:number(metrics.population),forest:`${metrics.forestPercent}%`,runway:metrics.runway===Infinity?'Covered':`${metrics.runway} weeks`};
+  for(const [name,value] of Object.entries(values))document.querySelector(`[data-resource="${name}"]`).textContent=value;
+  document.querySelector('[data-resource-balance]').textContent=`${metrics.burn>0?'−':'+'}${number(Math.abs(metrics.burn))} FC/week · Y${metrics.year} W${metrics.week}`;
+  for(const [id,value,target,action] of [['trust',state.awareness,GRANT_REQUIREMENTS.trust,'outreach builds trust'],['evidence',state.evidence,GRANT_REQUIREMENTS.evidence,'fund field monitoring']]){
+    const met=value>=target;document.querySelector(`[data-resource-kind="${id}"]`).classList.toggle('requirement-met',met);
+    document.querySelector(`[data-resource-${id}]`).textContent=`${met?'✓ Grant target met':`Grant needs ${target}`} · ${action}`;
+  }
+  for(const [id,value,target,label] of [['evidence',state.evidence,GRANT_REQUIREMENTS.evidence,'Evidence'],['trust',state.awareness,GRANT_REQUIREMENTS.trust,'Trust'],['fee',state.balanceFC,FUNDRAISERS.grant.cost,'Credits']]){
+    const element=document.querySelector(`[data-grant-${id}]`),met=value>=target;
+    element.textContent=`${met?'✓':'○'} ${label}: ${Math.floor(value)} / ${target}`;element.classList.toggle('met',met);
+  }
 }
 function actOnRoute(id){
   selection={type:'route',id};const response=applyTool(state,tool,id);handle(response);
@@ -112,7 +126,9 @@ function renderFinance(metrics){
   document.querySelector('[data-campaign]').textContent=current?current.firstPaid?`Grant: first half received. Final half requires 13 weeks and four new paid monitoring weeks (${Math.min(4,state.reportWork-current.reportBaseline)}/4 complete).`:`${FUNDRAISERS[current.id].label}: ${Math.max(0,current.due-state.totalWeeks)} weeks remaining.`:'Fundraising team available. One campaign at a time.';
   for(const button of document.querySelectorAll('[data-fundraiser]')){
     const id=button.dataset.fundraiser,config=FUNDRAISERS[id],wait=Math.max(0,(state.cooldowns[id]||0)-state.totalWeeks);
-    button.disabled=state.status!=='playing'||!!current||wait>0||(id==='appeal'&&state.balanceFC>=1000&&state.shortfallWeeks===0);
+    const lacksGrantRequirements=id==='grant'&&(state.evidence<GRANT_REQUIREMENTS.evidence||state.awareness<GRANT_REQUIREMENTS.trust);
+    button.disabled=state.status!=='playing'||!!current||wait>0||state.balanceFC<config.cost||lacksGrantRequirements||(id==='appeal'&&state.balanceFC>=1000&&state.shortfallWeeks===0);
+    if(id==='grant')document.querySelector('[data-grant-availability]').textContent=state.status!=='playing'?'Campaign ended':current?'Fundraising team busy':wait?`Renewal cooldown: ${wait} weeks`:lacksGrantRequirements?'Not ready · build the missing resources':state.balanceFC<config.cost?'Not ready · need application credits':'Ready to apply';
     const award=fundingAward(state,id);
     button.querySelector('small').textContent=`${wait?`Cooldown: ${wait} weeks remaining. `:''}${config.cost} FC · ${config.duration} weeks · ${id==='grant'?`${number(award/2)} + ${number(award/2)} FC`:`base ${number(award)} FC`} · ${config.cooldown}-week rest after completion`;
   }
@@ -149,7 +165,7 @@ function render(){
   document.querySelectorAll('[data-tool]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.tool===tool));button.disabled=state.status!=='playing';if(toolCosts[button.dataset.tool])button.querySelector('small').textContent=toolCosts[button.dataset.tool];});
   document.querySelector('[data-wildlife]').innerHTML=Object.entries(state.wildlife).map(([name,value])=>`<div class="wildlife-row"><span>${name}</span><strong>${value-100>=0?'+':''}${value-100}%</strong></div>`).join('');
   document.querySelector('[data-event-log]').innerHTML=state.events.map(entry=>`<li class="${entry.tone}"><time>Y${Math.floor(entry.week/52)+1} W${entry.week%52+1}</time>${entry.message}</li>`).join('');
-  renderMap();renderFinance(metrics);renderInspector();renderTutorial();
+  renderResources(metrics);renderMap();renderFinance(metrics);renderInspector();renderTutorial();
   if(state.status!=='playing'&&!terminalShown){terminalShown=true;report();}
 }
 function report(annual=false){
@@ -183,4 +199,10 @@ document.querySelector('[data-tutorial-next]').addEventListener('click',()=>{
 map.addEventListener('click',event=>{if(!event.target.closest('[data-route], [data-patch]')){message(`Choose a named route to ${toolNames[tool].toLowerCase()}, or a forest grove to see its connected routes.`);revealSelection();}});
 dialog.addEventListener('close',()=>{if(state.status==='playing'&&dialog.returnValue!=='reset'){state.paused=false;clock();render();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){state.paused=true;clock();save();render();}});
-render();clock();
+const resourceBar=document.querySelector('[data-resource-bar]'),siteHeader=document.querySelector('.site-header');
+function sizeResourceBar(){
+  document.documentElement.style.setProperty('--game-header-height',`${siteHeader.getBoundingClientRect().height}px`);
+  document.documentElement.style.setProperty('--game-resource-height',`${resourceBar.getBoundingClientRect().height}px`);
+}
+const resourceObserver=new ResizeObserver(sizeResourceBar);resourceObserver.observe(resourceBar);resourceObserver.observe(siteHeader);
+render();sizeResourceBar();clock();

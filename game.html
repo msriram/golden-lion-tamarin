@@ -32,6 +32,14 @@
 
     <section class="game-frame" id="game-app" aria-label="Tamarin Trails conservation game">
       <div class="game-titlebar"><strong>Campaign — The Cost of Connection</strong><div class="difficulty-controls"><label for="game-difficulty">Mode</label><select id="game-difficulty" data-difficulty><option value="tutorial">Guided tutorial</option><option value="explorer">Explorer · easier</option><option value="challenge" selected>Challenge</option><option value="expert">Expert · toughest</option></select><button class="game-button" type="button" data-new-game>New game</button></div></div>
+      <dl class="resource-bar" data-resource-bar aria-label="Live conservation resources">
+        <div class="resource-item"><dt><span class="resource-symbol" aria-hidden="true">FC</span>Forest Credits</dt><dd data-resource="funds">12,000 FC</dd><small data-resource-balance></small></div>
+        <div class="resource-item" data-resource-kind="trust"><dt><span class="resource-symbol" aria-hidden="true">♥</span>Community trust</dt><dd data-resource="trust">38 / 100</dd><small data-resource-trust>Grant needs 45 · outreach builds trust</small></div>
+        <div class="resource-item" data-resource-kind="evidence"><dt><span class="resource-symbol" aria-hidden="true">◎</span>Monitoring evidence</dt><dd data-resource="evidence">0 / 100</dd><small data-resource-evidence>Grant needs 20 · fund field monitoring</small></div>
+        <div class="resource-item"><dt><span class="resource-symbol" aria-hidden="true">↗</span>Tamarin population</dt><dd data-resource="tamarins">5,000</dd><small>Recovery goal: 10,000</small></div>
+        <div class="resource-item"><dt><span class="resource-symbol" aria-hidden="true">♧</span>Forest cover</dt><dd data-resource="forest">32%</dd><small>Plant and maintain native trees</small></div>
+        <div class="resource-item"><dt><span class="resource-symbol" aria-hidden="true">◷</span>Cash runway</dt><dd data-resource="runway">—</dd><small>Time until reserves run out</small></div>
+      </dl>
       <div class="game-layout">
       <aside class="game-stats" aria-label="Campaign statistics and funding">
       <div class="game-hud" aria-label="Game statistics">
@@ -43,7 +51,7 @@
       </div>
       <section class="finance-panel" aria-label="Budget and cash runway"><h2>Weekly budget</h2><div class="finance-grid" data-finance></div><p class="risk-message" data-risk role="status"></p><p class="fact-note" data-difficulty-copy></p></section>
       <section class="side-panel threat-panel"><h2>Threat watch</h2><p data-threat></p></section>
-      <section class="side-panel"><h2>Funding desk</h2><p class="fact-note" data-campaign></p><div class="fundraiser-grid"><button class="fundraiser-button" type="button" data-fundraiser="presentation">School outreach<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">Science festival<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="grant">Evidence grant<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="appeal">Emergency appeal<small></small></button></div></section>
+      <section class="side-panel"><h2>Funding desk</h2><p class="fact-note" data-campaign></p><div class="fundraiser-grid"><button class="fundraiser-button" type="button" data-fundraiser="presentation">School outreach<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="scienceFair">Science festival<small></small></button><button class="fundraiser-button" type="button" data-fundraiser="grant">Evidence grant<small></small><span class="grant-requirements" data-grant-requirements><span data-grant-evidence></span><span data-grant-trust></span><span data-grant-fee></span></span><span class="grant-availability" data-grant-availability></span></button><button class="fundraiser-button" type="button" data-fundraiser="appeal">Emergency appeal<small></small></button></div></section>
       <section class="side-panel"><h2>Season</h2><p class="fact-note" data-season></p></section>
       <section class="side-panel"><h2>Wildlife indices</h2><div class="wildlife-list" data-wildlife></div></section>
       <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log></ol></section>

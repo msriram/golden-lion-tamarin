@@ -1,4 +1,5 @@
 export const TREE_MATURITY_WEEKS = 208;
+export const GRANT_REQUIREMENTS = {evidence:20,trust:45};
 export const DIFFICULTIES = {
   tutorial:{label:'Guided tutorial',operations:.55,income:1.4,threat:.4,growth:1.4,description:'Step-by-step guidance, 45% lower weekly bills, 40% higher funding awards, gentler threats, and faster population recovery.'},
   explorer:{label:'Explorer',operations:.75,income:1.15,threat:.7,growth:1.15,description:'25% lower weekly bills, 15% higher funding awards, and gentler threats. Make your own conservation decisions.'},
@@ -169,7 +170,7 @@ export function startFundraiser(oldState,id) {
   if(oldState.fundraisers.some(entry=>!entry.completed))return result(oldState,false,'The fundraising team is busy.');
   if((oldState.cooldowns[id]||0)>oldState.totalWeeks)return result(oldState,false,`Available again in ${oldState.cooldowns[id]-oldState.totalWeeks} weeks.`);
   if(id==='appeal'&&oldState.balanceFC>=1000&&oldState.shortfallWeeks===0)return result(oldState,false,'Emergency appeals are reserved for a cash crisis below 1,000 FC.');
-  if(id==='grant'&&(oldState.evidence<20||oldState.awareness<45))return result(oldState,false,'Grant requires 20 monitoring evidence and 45 community trust.');
+  if(id==='grant'&&(oldState.evidence<GRANT_REQUIREMENTS.evidence||oldState.awareness<GRANT_REQUIREMENTS.trust))return result(oldState,false,`Grant requires ${GRANT_REQUIREMENTS.evidence} monitoring evidence and ${GRANT_REQUIREMENTS.trust} community trust.`);
   const state=clone(oldState);
   if(!pay(state,config.cost,config.label))return result(oldState,false,`Need ${config.cost} FC to prepare this campaign.`);
   state.cooldowns[id]=state.totalWeeks+config.duration+config.cooldown;
@@ -241,7 +242,7 @@ export function simulateOneWeek(oldState) {
       event(state,'Grant report accepted. Final installment received; renewal cooldown begins.','income');continue;
     }
     campaign.completed=true;
-    const approved=campaign.id!=='grant'||(state.evidence>=20&&state.awareness>=45);
+    const approved=campaign.id!=='grant'||(state.evidence>=GRANT_REQUIREMENTS.evidence&&state.awareness>=GRANT_REQUIREMENTS.trust);
     const payout=approved?Math.round(fundingAward(state,campaign.id)*(campaign.id==='grant' ? .5 : campaign.id==='appeal'?1:(.7+state.awareness/200)*(.85+random(state)*.3))):0;
     if(campaign.id==='grant'&&approved){campaign.firstPaid=true;campaign.completed=false;campaign.reportBaseline=state.reportWork;campaign.due=state.totalWeeks+13;}
     else state.cooldowns[campaign.id]=state.totalWeeks+config.cooldown;

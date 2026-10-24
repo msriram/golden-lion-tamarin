@@ -708,6 +708,19 @@
 @media(max-width:760px) { .toolbelt { grid-template-columns:repeat(2,1fr); } .route-marker { max-width:85px; font-size:.6rem; padding:3px; } .route-marker small { font-size:.5rem; } .game-map { min-height:440px; } .finance-grid { grid-template-columns:repeat(2,1fr); } }
 
 .game-frame { width:calc(100% - 1rem); max-width:2200px; box-shadow:none; scroll-margin-top:90px; }
+.game-page main { overflow:visible; }
+.resource-bar { position:sticky; top:var(--game-header-height,80px); z-index:25; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); margin:0; background:#173d30; color:#fff7df; border-block:2px solid #a6a16b; box-shadow:0 4px 8px #193d3020; }
+.resource-item { min-width:0; padding:.65rem .8rem; border-right:1px solid #7f94664d; font-variant-numeric:tabular-nums; }
+.resource-item dt { display:flex; gap:.4rem; align-items:center; font-size:.68rem; color:#e0dfbb; font-weight:600; }
+.resource-symbol { color:#edbd60; font-size:.85rem; }
+.resource-item dd { margin:.15rem 0; font-size:1.35rem; font-weight:700; line-height:1.25; }
+.resource-item small { display:block; font-size:.62rem; line-height:1.35; color:#dfcba4; }
+.resource-item.requirement-met small { color:#bde2ad; }
+.grant-requirements { display:grid; gap:.15rem; margin-top:.5rem; font-size:.7rem; font-weight:500; }
+.grant-requirements span { color:#87542d; }
+.grant-requirements .met { color:#35653a; }
+.grant-availability { display:block; margin-top:.45rem; font-size:.7rem; font-weight:700; }
+.fundraiser-button:disabled { opacity:.85; }
 .game-intro { padding:1.5rem 0 1rem; }
 .game-intro h1 { font-size:clamp(1.9rem,3vw,3rem); max-width:none; }
 .game-layout { grid-template-columns:240px minmax(0,1fr) 300px; align-items:start; }
@@ -728,7 +741,7 @@
 .difficulty-controls { display:flex; align-items:center; flex-wrap:wrap; gap:.6rem; font-size:.8rem; }
 .difficulty-controls select { padding:.5rem; color:#173e30; background:#fff9e9; border:1px solid #a8b394; max-width:100%; }
 .difficulty-controls .game-button { color:#fff9e9; border-color:#b8c5ac; }
-.selection-panel { border:1px solid #869978; background:#fffbee; padding:.7rem; margin-bottom:.7rem; scroll-margin-top:95px; }
+.selection-panel { border:1px solid #869978; background:#fffbee; padding:.7rem; margin-bottom:.7rem; scroll-margin-top:calc(var(--game-header-height,80px) + var(--game-resource-height,100px) + 12px); }
 .selection-heading { display:flex; justify-content:space-between; align-items:center; gap:.5rem; }
 .selection-heading h2 { font-size:1rem; margin:0; }
 .selection-heading [data-selected-tool] { font-size:.7rem; color:#45613c; }
@@ -749,7 +762,7 @@
 .tutorial-panel p { font-size:.8rem; margin:0; }
 .tutorial-panel .game-button { flex-shrink:0; max-width:180px; padding:.6rem; }
 @media(min-width:1101px) {
-  .game-stats, .game-sidebar { position:sticky; top:90px; max-height:calc(100dvh - 105px); overflow-y:auto; scrollbar-width:thin; scrollbar-color:#6e8861 #f7f0dc; }
+  .game-stats, .game-sidebar { position:sticky; top:calc(var(--game-header-height,80px) + var(--game-resource-height,100px) + 8px); max-height:calc(100dvh - var(--game-header-height,80px) - var(--game-resource-height,100px) - 20px); overflow-y:auto; scrollbar-width:thin; scrollbar-color:#6e8861 #f7f0dc; }
 }
 @media(min-width:1101px) and (max-width:1400px) {
   .game-layout { grid-template-columns:210px minmax(0,1fr) 270px; }
@@ -757,6 +770,7 @@
   .tool-button { padding:.4rem; font-size:.7rem; }
 }
 @media(max-width:1100px) {
+  .resource-bar { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .game-layout { grid-template-columns:minmax(0,1fr) 290px; }
   .game-main { grid-column:1; grid-row:1; border-left:0; }
   .game-sidebar { grid-column:2; grid-row:1 / span 2; position:static; max-height:none; overflow:visible; }
@@ -766,6 +780,10 @@
   .game-stats .finance-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 @media(max-width:760px) {
+  .resource-item { padding:.4rem; }
+  .resource-item dt { font-size:.6rem; gap:.2rem; }
+  .resource-item dd { font-size:1rem; }
+  .resource-item small { font-size:.55rem; }
   .game-layout { display:flex; flex-direction:column; }
   .game-main, .game-stats, .game-sidebar { width:100%; position:static; max-height:none; overflow:visible; }
   .game-main { order:0; border:0; }
