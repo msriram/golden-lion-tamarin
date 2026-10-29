@@ -17,6 +17,7 @@ const number=value=>Math.round(value).toLocaleString();
 function handle(result){state=result.state;message(result.message,result.ok?'success':'error');save();render();}
 function revealSelection(){
   const panel=document.querySelector('[data-selection-panel]'),bounds=panel.getBoundingClientRect();
+  if(panel.hidden)return;
   const barBottom=document.querySelector('[data-resource-bar]').getBoundingClientRect().bottom;
   if(bounds.top<barBottom||bounds.top>innerHeight-120)panel.scrollIntoView({block:'start',behavior:'instant'});
 }
@@ -43,10 +44,11 @@ function actOnRoute(id){
   revealSelection();
 }
 function renderInspector(){
+  document.querySelector('[data-selection-panel]').hidden=!selection;
   document.querySelector('[data-selected-tool]').textContent=`Tool: ${toolNames[tool]}`;
   const title=document.querySelector('[data-inspector-title]'),copy=document.querySelector('[data-inspector]'),status=document.querySelector('[data-inspector-status]');
   status.replaceChildren();
-  if(!selection){title.textContent='Choose a route or forest grove';copy.textContent='Choose a tool, then click a named route on the map. Click a forest grove to inspect its population and habitat.';return;}
+  if(!selection){title.textContent='';copy.textContent='';return;}
   const fields=selection.type==='route'?(()=>{
     const link=state.links.find(entry=>entry.id===selection.id);title.textContent=link.name;
     copy.textContent=link.agreementDue?`Negotiations are underway. Wait ${link.agreementDue-state.totalWeeks} weeks before construction.`:!link.agreement?'Next: negotiate land access. It costs 600 FC and takes 12 weeks.':link.bridgeDue?'Construction is underway. Keep weekly bills funded until the bridge opens.':!link.built?`Next: build this bridge for ${number(link.cost)} FC. One crew is available; construction takes 16 funded weeks.`:!activeLink(link)?'This bridge is closed. Use Repair & replant to restore its condition.':!link.planted?'Next: plant native tree cover in the wet season for 1,200 FC. Trees expand habitat as they grow.':'Maintain the bridge and seedlings. Healthy tree cover expands habitat and supports population recovery.';
