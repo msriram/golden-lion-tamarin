@@ -26,7 +26,7 @@ Start with 5,000 simulated tamarins; win at 10,000 and lose strictly below 1,000
 
 Run `node scripts/playtest.mjs` for seeded comparisons of idle, rushing, always-funded-services, and adaptive reserve strategies. The regression tests verify a winning adaptive policy across three seeds; these are developer playtests, not measured student success rates.
 
-The widescreen campaign desk has statistics and funding on the left, the map and live selection/action panel in the center, and recovery targets and local programs on the right. At smaller widths it reflows without hiding routes. Select a named route to use a tool, or a grove to inspect it and choose one of its connected routes. Agreement and construction countdowns refresh while the simulation runs.
+The widescreen campaign desk has statistics and funding on the left, the map and live selection/action panel in the center, and recovery targets and local programs on the right. At smaller widths it reflows without hiding routes. Choose a tool, then click a named route on the map; click a grove to inspect its population and habitat. There is no duplicate list of route buttons above the map. Agreement and construction countdowns refresh while the simulation runs.
 
 A sticky strategy-style resource bar keeps credits, trust, monitoring evidence, population, forest cover, and cash runway visible while playing, including on mobile. Trust and evidence show grant targets and how to build them. The grant button lists live evidence, trust, and application-credit requirements, plus team/cooldown availability; it is disabled until all application conditions are met. Grant thresholds come from the shared `GRANT_REQUIREMENTS` definition in the simulation engine.
 
