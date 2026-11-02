@@ -16,3 +16,9 @@
 - `events/bake-sale-nov-1-stall.png`: supplied image 4; original image copied without edits.
 - These photographs are not covered by the Wikimedia photo licence above. No open licence is asserted.
 - Public captions identify the team collectively, not individual children by their position in a photo. Other supplied crowd photos have not been published.
+
+# Tabletop bridge CAD preview
+
+- `project/assembly-preview.png`: organizer-supplied tabletop bridge CAD assembly preview, copied unchanged from the supplied image.
+- Presented as a classroom design concept; no physical testing, recycled-PET manufacture, field installation, or animal use is asserted.
+- The separate bottle-to-filament inspiration screenshot was not published because its source and reuse permission were not provided.

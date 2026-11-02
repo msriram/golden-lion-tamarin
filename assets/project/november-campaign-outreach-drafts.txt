@@ -1,0 +1,130 @@
+RAINFOREST RANGERS / TAMARIN TRAILS
+November 2026 campaign and outreach drafts
+Prepared November 1, 2026. For adult review; not sent.
+
+1. SMALL CAMPAIGN: ONE SMALL ACTION. A GROWING CONNECTION.
+Planned launch: November 7, 2026
+
+First milestone: $200 raised at Prospector Park, Folsom, November 1,
+2-5 p.m., from cookies, brownies, hot chocolate, fruit cups, bracelets,
+and stickers. This is money received by the team, not a completed donation.
+
+Suggested campaign invitation:
+We are Rainforest Rangers, fourth graders from Folsom. Our first bake
+sale raised $200 for our golden lion tamarin conservation mission.
+We plan to support Save the Golden Lion Tamarin and keep sharing what
+we learn. Play our forest game, tell a friend why connected habitat
+matters, or join a future adult-organized fundraiser. Every month,
+we aim to share one small action and an honest progress update.
+
+Keep startup costs at zero: use the existing website, free sharing by
+adults, school-approved channels, and donated display materials.
+Plan to donate the first $200, not spend it on advertising. Confirm
+any fundraising expenses and the actual amount sent with an adult.
+No expense has been recorded. Do not promise a number of trees or bridges.
+
+Suggested sequence:
+- November 2-6: adult checks the event total, confirms official contact
+  and donation instructions, reviews this draft and CAD description.
+- November 7 (planned): share the campaign, contact the nonprofit,
+  and make the donation through its official route once verified.
+- After transfer: record actual date, amount, and receipt privately;
+  update the public tracker without banking or donor details.
+- After acknowledgment: record what the recipient actually confirmed.
+- Before November 15: summarize work and any reply. If no reply has
+  arrived, say "outreach pending" rather than imply collaboration.
+- Monthly thereafter (proposal): choose one small learning or fundraising
+  action with adult approval. Review whether this pace is practical.
+
+2. FIRST-CONTACT EMAIL -- BEFORE TRANSFER
+
+To: adult organizer to verify using the nonprofit's official website
+https://www.savetheliontamarin.org/
+
+Subject: Folsom fourth graders raised $200 for golden lion tamarin conservation
+
+Hello Save the Golden Lion Tamarin team,
+
+We are Rainforest Rangers, a fourth-grade FIRST LEGO League team at
+Theodore Judah Elementary in Folsom, California. Our project is called
+Tamarin Trails.
+
+On November 1, we raised $200 at a community bake sale. We would like
+to donate these funds and continue supporting conservation through
+small, regular fundraising and education activities. Could you confirm
+the best official donation route and how our adult organizer should
+request acknowledgment after the transfer?
+
+We are studying canopy bridges, native-tree corridors, and connected
+forest. Our tabletop CAD concept explores modular parts made from
+recycled bottle PET, vines for cover, and intermediate rest landings.
+It has not been field-tested, and we are not proposing installation
+without expert review. Would someone be willing to tell us whether
+any part of this idea is worth exploring, and what safety or habitat
+questions we should investigate first?
+
+What specific help from a student team would be useful now? We would
+be grateful for a short reply or a brief Q&A, if your team has time.
+
+Our project and timeline:
+https://msriram.github.io/golden-lion-tamarin/team.html#timeline
+Our funding tracker:
+https://msriram.github.io/golden-lion-tamarin/impact.html
+Our tabletop CAD concept:
+https://msriram.github.io/golden-lion-tamarin/team.html#bridge-concept
+
+Thank you for your work,
+Rainforest Rangers / Tamarin Trails
+Sent by our adult organizer
+
+3. RECEIPT FOLLOW-UP -- ONLY AFTER AN ACTUAL TRANSFER
+
+Adult: replace bracketed fields with verified details before sending.
+Do not publish financial account information or an unredacted receipt.
+
+Subject: Receipt confirmation for our student team's donation
+
+Hello Save the Golden Lion Tamarin team,
+
+Our adult organizer sent [actual amount] through [official donation
+method] on [actual date]. Our receipt/reference is [reference supplied
+privately if needed]. Could you confirm receipt when convenient?
+
+The funds came from our November 1 bake sale in Folsom. We would also
+welcome your advice on a specific need our students could support
+through future fundraising, education, or a supervised model project.
+We understand that funds may support your priorities rather than a
+particular structure, tree count, or project of our choosing.
+
+Thank you,
+Rainforest Rangers / Tamarin Trails
+Sent by our adult organizer
+
+4. NOVEMBER 15 FLL INNOVATION ROUND-UP -- PLANNED
+
+Present the learning journey rather than claim unverified outcomes:
+1. August: team-name ideation, Rainforest Rangers.
+2. September: habitat fragmentation and golden lion tamarin research.
+3. October 15: bridge -> tree corridor -> connected forest concept;
+   recycled bottle PET parts, vines, intermediate rest landings.
+4. October 20: identify Save the Golden Lion Tamarin as a recipient
+   supporting Brazil-led work; set up the funding tracker.
+5. November 1: bake sale, $200 raised, event photos and organizer report.
+6. November 7 plan: outreach, official donation, acknowledgment request,
+   and questions about useful help. Update with actual status by judging.
+7. Show the CAD preview as a tabletop concept. Do not claim it is
+   physically tested, printed in recycled PET, or used by wild animals.
+
+Ask the judges:
+- Which assumption should we test first?
+- How could we measure whether our design is better than a simpler model?
+- What evidence would make our proposed next step more convincing?
+
+Feedback record:
+- Date / setting:
+- Feedback received:
+- What we learned:
+- One priority change:
+- Person responsible and target date:
+
+These are drafts and plans. No messages or donations are sent by this file.

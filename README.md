@@ -34,6 +34,8 @@ Choose a difficulty and press New game to start that scenario. Challenge preserv
 
 Future project ideas live in the team page's Hope ahead and Bottle lab sections. Proposed activities must be updated with evidence before being marked complete.
 
+The team page also records the organizer-provided August–November 2026 project timeline, identifies Rainforest Rangers as the team and Tamarin Trails as its project, and displays the supplied tabletop CAD preview without asserting physical testing or field deployment. November 7 campaign/outreach and November 15 judges' feedback remain planned. The downloadable campaign and email drafts in `assets/project/november-campaign-outreach-drafts.txt` require adult review; the website sends no messages or donations. The bottle-to-filament inspiration screenshot is not republished without source/reuse information.
+
 ## Update the impact tracker
 
 Edit `data/impact.json`. Keep the five stages separate:

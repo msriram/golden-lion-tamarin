@@ -42,5 +42,25 @@ strong, .primary-nav a, .button, .fact-label { font-weight: 600; }
 .fundraiser-milestone { padding:1.5rem; margin:1.5rem; border-left:4px solid var(--gold); background:#f3efd9; }
 .fundraiser-milestone h3 { font-size:1.4rem; }
 .donation-follow-through { display:flex; flex-wrap:wrap; gap:.5rem; }
+.project-jump-links { display:flex; flex-wrap:wrap; gap:.5rem 1.2rem; margin-top:1rem; font-size:.9rem; }
+#timeline, #bridge-concept, #november-campaign { scroll-margin-top:95px; }
+.project-timeline { list-style:none; margin:2rem 0 0; padding:0; }
+.milestone { display:grid; grid-template-columns:190px minmax(0,1fr); column-gap:2.3rem; position:relative; padding:0 0 2.5rem 2rem; margin-left:.5rem; border-left:2px solid #a0b18c; }
+.milestone::before { content:''; position:absolute; width:13px; height:13px; left:-8px; top:5px; border-radius:50%; border:2px solid #3d6548; background:#3d6548; }
+.milestone.planned { border-left-style:dashed; }
+.milestone.planned::before { background:var(--paper); border-color:#aa7838; }
+.milestone:last-child { padding-bottom:0; }
+.milestone-date time { display:block; font-size:1rem; font-weight:600; margin-bottom:.5rem; }
+.milestone h3 { margin-top:0; font-size:1.35rem; }
+.milestone p { max-width:70ch; margin-bottom:.7rem; }
+.milestone .tag { font-size:.67rem; }
+.bridge-assembly { max-width:1000px; margin-inline:auto; }
+.concept-notes { margin-top:2rem; }
+.campaign-invitation { padding:1.5rem; background:#e8eedf; border-left:4px solid #63834d; }
+.campaign-invitation h3 { font-size:1.6rem; }
+.outreach-draft { margin-top:2rem; padding:1rem 1.2rem; border:1px solid #9cae91; background:var(--paper); }
+.outreach-draft summary { cursor:pointer; font-weight:600; }
+.outreach-draft > div { max-width:78ch; margin-top:1.5rem; }
+@media(max-width:720px) { .milestone { grid-template-columns:1fr; gap:.8rem; padding-left:1.2rem; } .milestone-date { display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; } .milestone-date time { margin:0; } }
 @media(max-width:1000px) { .hero-grid { grid-template-columns: 1fr; } .hero-art { max-width: 660px; } }
 @media(max-width:720px) { .recycling-flow { grid-template-columns:1fr; } .hero-home h1 { font-size: 2.7rem; } }
