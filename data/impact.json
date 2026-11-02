@@ -1,13 +1,32 @@
 {
-  "lastUpdated": "2026-10-22",
+  "lastUpdated": "2026-11-01",
   "currency": "USD",
   "goal": 2500,
   "stages": {
     "pledged": 0,
-    "received": 0,
+    "received": 200,
     "sent": 0,
     "acknowledged": 0
   },
+  "plannedRecipient": {
+    "name": "Save the Golden Lion Tamarin",
+    "url": "https://www.savetheliontamarin.org/",
+    "status": "Transfer planned"
+  },
+  "events": [
+    {
+      "id": "bake-sale-2026-11-01",
+      "name": "Prospector Park bake sale",
+      "date": "2026-11-01",
+      "location": "Prospector Park, Folsom",
+      "startTime": "14:00",
+      "endTime": "17:00",
+      "timeZone": "America/Los_Angeles",
+      "raised": 200,
+      "itemsSold": ["Cookies", "Brownies", "Hot chocolate", "Fruit cups", "Bracelets", "Stickers"],
+      "source": "Team organizer report, November 1, 2026"
+    }
+  ],
   "fieldOutcomes": {
     "seedlingsReported": 0,
     "crossingsReported": 0,
@@ -19,7 +38,9 @@
     "monitoringDayShare": 350
   },
   "notes": [
-    "Our first fundraising events are being planned.",
-    "We will share recipient acknowledgments and forest updates as they arrive."
+    "November 1, 2026: our bake sale at Prospector Park, Folsom, raised $200 between 2 and 5 p.m.",
+    "We sold cookies, brownies, hot chocolate, fruit cups, bracelets, and stickers. Total reported by our team organizer.",
+    "The $200 is received by the team. We plan to send it to Save the Golden Lion Tamarin; the transfer has not yet been recorded.",
+    "We will add the donation date and recipient acknowledgment after the money is sent. Field outcomes remain pending."
   ]
 }

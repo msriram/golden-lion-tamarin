@@ -32,5 +32,15 @@ strong, .primary-nav a, .button, .fact-label { font-weight: 600; }
 .team-roster li { padding: .8rem 0; border-bottom: 1px solid var(--line); font-size: 1.15rem; font-weight: 500; }
 .team-photo-placeholder { display: flex; margin: 0; min-height: 320px; aspect-ratio: 4 / 3; border: 2px dashed #9caf95; border-radius: 12px; background: #e9eee1; color: var(--forest-700); flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
 .team-photo-placeholder figcaption { padding: 1rem; text-align: center; }
+.event-photo { margin:0; min-width:0; }
+.event-photo img { display:block; width:100%; height:auto; border-radius:12px; }
+.event-photo figcaption { font-size:.78rem; line-height:1.6; color:var(--forest-700); margin-top:.7rem; }
+.event-highlight { align-items:center; }
+.bake-sale-story { scroll-margin-top:95px; }
+.event-total { font-size:clamp(3rem,6vw,5rem); line-height:1.1; color:var(--forest-900); font-weight:650; margin:0 0 1.3rem; }
+.event-total span { display:block; font-size:1rem; line-height:1.6; font-weight:500; margin-top:.5rem; }
+.fundraiser-milestone { padding:1.5rem; margin:1.5rem; border-left:4px solid var(--gold); background:#f3efd9; }
+.fundraiser-milestone h3 { font-size:1.4rem; }
+.donation-follow-through { display:flex; flex-wrap:wrap; gap:.5rem; }
 @media(max-width:1000px) { .hero-grid { grid-template-columns: 1fr; } .hero-art { max-width: 660px; } }
 @media(max-width:720px) { .recycling-flow { grid-template-columns:1fr; } .hero-home h1 { font-size: 2.7rem; } }
