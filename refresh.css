@@ -61,6 +61,13 @@ strong, .primary-nav a, .button, .fact-label { font-weight: 600; }
 .outreach-draft { margin-top:2rem; padding:1rem 1.2rem; border:1px solid #9cae91; background:var(--paper); }
 .outreach-draft summary { cursor:pointer; font-weight:600; }
 .outreach-draft > div { max-width:78ch; margin-top:1.5rem; }
+.outreach-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.25rem; align-items:start; }
+.outreach-gallery figure { min-width:0; margin:0; }
+.outreach-gallery img { display:block; width:100%; height:auto; border-radius:10px; }
+.outreach-gallery figcaption { padding-top:.65rem; font-size:1rem; font-weight:600; }
+#spreading-the-word { scroll-margin-top:95px; }
+@media(max-width:1000px) { .outreach-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:480px) { .outreach-gallery { grid-template-columns:1fr; gap:1.7rem; } }
 @media(max-width:720px) { .milestone { grid-template-columns:1fr; gap:.8rem; padding-left:1.2rem; } .milestone-date { display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; } .milestone-date time { margin:0; } }
 @media(max-width:1000px) { .hero-grid { grid-template-columns: 1fr; } .hero-art { max-width: 660px; } }
 @media(max-width:720px) { .recycling-flow { grid-template-columns:1fr; } .hero-home h1 { font-size: 2.7rem; } }

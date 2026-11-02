@@ -22,3 +22,14 @@
 - `project/assembly-preview.png`: organizer-supplied tabletop bridge CAD assembly preview, copied unchanged from the supplied image.
 - Presented as a classroom design concept; no physical testing, recycled-PET manufacture, field installation, or animal use is asserted.
 - The separate bottle-to-filament inspiration screenshot was not published because its source and reuse permission were not provided.
+
+# Student outreach photographs
+
+- Four organizer-supplied photographs, labelled by the organizer in this order: Arjun, Anay, Sara, Aadhya.
+- `team/arjun-outreach.jpg`: supplied image 1.
+- `team/anay-outreach.jpg`: supplied image 2.
+- `team/sara-outreach.jpg`: supplied image 3.
+- `team/aadhya-outreach.jpg`: supplied image 4.
+- Converted from supplied PNGs to JPEG for web delivery; original dimensions and composition retained. No image generation or retouching.
+- Captions use the first names explicitly supplied with these images. No residential addresses or exact photo locations are added.
+- Organizer-provided project photos; no open licence or Wikimedia attribution is asserted.
