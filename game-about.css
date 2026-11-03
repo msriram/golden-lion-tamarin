@@ -1,0 +1,13 @@
+.game-overview-hero { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; }
+.game-overview-hero h1 { font-size:clamp(2.5rem,4.6vw,4.5rem); max-width:11ch; }
+.landscape-preview { min-width:0; margin:0; }
+.landscape-preview svg { display:block; width:100%; height:auto; border-radius:8px; }
+.landscape-preview figcaption { margin-top:.7rem; font-size:.78rem; color:var(--forest-700); }
+.game-rule-columns { columns:2; column-gap:3rem; }
+.game-rule-columns li { break-inside:avoid; padding-bottom:1.2rem; }
+.accounts-scroll { overflow-x:auto; }
+.mode-table { width:100%; border-collapse:collapse; font-size:.9rem; }
+.mode-table th, .mode-table td { text-align:left; padding:.9rem; border-bottom:1px solid var(--line); }
+.mode-table th { background:#e6ebdc; }
+.mode-table tr[data-recommended] { background:#f1efdd; font-weight:600; }
+@media(max-width:760px) { .game-overview-hero { grid-template-columns:1fr; gap:2rem; } .game-rule-columns { columns:1; } .mode-table { min-width:610px; } }

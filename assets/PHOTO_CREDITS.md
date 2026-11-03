@@ -33,3 +33,13 @@
 - Converted from supplied PNGs to JPEG for web delivery; original dimensions and composition retained. No image generation or retouching.
 - Captions use the first names explicitly supplied with these images. No residential addresses or exact photo locations are added.
 - Organizer-provided project photos; no open licence or Wikimedia attribution is asserted.
+
+# Robotics teamwork photographs
+
+- Three organizer-supplied photographs shared for the team's robotics building and testing gallery.
+- `team/robotics-team.jpg`: supplied image 1, team holding builds behind the mission table.
+- `team/robotics-teamwork.jpg`: supplied image 2, team raising their builds.
+- `team/robotics-builds.jpg`: supplied image 3, team with robots and attachments beside the practice table.
+- Converted from PNG to JPEG for web delivery; original 1600 × 1200 dimensions and composition retained. No image generation or retouching.
+- Captions describe the group without assigning individual names by position, dates, locations, or testing results.
+- Organizer-provided project photos; no open licence or Wikimedia attribution is asserted.

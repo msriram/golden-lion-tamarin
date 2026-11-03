@@ -1,12 +1,14 @@
 export const TREE_MATURITY_WEEKS = 208;
 export const GRANT_REQUIREMENTS = {evidence:20,trust:45};
+export const SUPPORT_RATES = {trustThreshold:35,trustPerPoint:2.8,corridorTrust:65,perMatureCorridor:35};
 export const DIFFICULTIES = {
-  tutorial:{label:'Guided tutorial',operations:.55,income:1.4,threat:.4,growth:1.4,description:'Step-by-step guidance, 45% lower weekly bills, 40% higher funding awards, gentler threats, and faster population recovery.'},
-  explorer:{label:'Explorer',operations:.75,income:1.15,threat:.7,growth:1.15,description:'25% lower weekly bills, 15% higher funding awards, and gentler threats. Make your own conservation decisions.'},
-  challenge:{label:'Challenge',operations:1,income:1,threat:1,growth:1,description:'The original challenging economy and threats. Balance recurring costs, slow restoration, and conservation setbacks.'},
-  expert:{label:'Expert',operations:1.15,income:.9,threat:1.3,growth:.9,description:'15% higher weekly bills, 10% lower funding awards, stronger threats, and slower population recovery.'}
+  tutorial:{label:'Guided tutorial',operations:.55,income:1.4,threat:.4,growth:1.4,description:'Step-by-step guidance: 45% lower weekly bills, 40% higher recurring support and awards, 40% faster births, and 60% weaker threat damage.'},
+  explorer:{label:'Explorer',operations:.75,income:1.15,threat:.7,growth:1.15,description:'25% lower weekly bills, 15% higher recurring support and awards, 15% faster births, and 30% weaker threat damage. Make your own conservation decisions.'},
+  standard:{label:'Standard',operations:.85,income:1.1,threat:.85,growth:1.1,description:'Recommended intermediate: 15% lower weekly bills, 10% higher recurring support and awards, 10% faster births, and 15% weaker threat damage. Fund outreach and monitoring, reserve cash through grant review and reporting, then expand one corridor at a time.'},
+  challenge:{label:'Challenge',operations:1,income:1,threat:1,growth:1,description:'Baseline bills, support, awards, births, and threat damage. Recurring supporters reward maintained trust and mature corridors; grants bridge the early deficit, not unlimited expansion. Keep reserves and time protection carefully.'},
+  expert:{label:'Expert',operations:1.15,income:.9,threat:1.3,growth:.9,description:'15% higher weekly bills, 10% lower recurring support and awards, 10% slower births, and 30% stronger threat damage. Protection and reserve management are essential.'}
 };
-export function getDifficulty(state){return DIFFICULTIES[state.difficulty]||DIFFICULTIES.challenge;}
+export function getDifficulty(state){return DIFFICULTIES[state.difficulty]||DIFFICULTIES.standard;}
 export function fundingAward(state,id){return Math.round(FUNDRAISERS[id].payout*getDifficulty(state).income);}
 export const PATCHES = [
   { id:'a', name:'West reserve', x:13, y:28, population:1100 },
@@ -51,26 +53,27 @@ function random(state) {
   state.rng=(Math.imul(state.rng,1664525)+1013904223)>>>0;
   return state.rng/4294967296;
 }
-function transaction(state,amount,category) {
+function transaction(state,amount,category,phase='action') {
+  if(!state.lastWeek&&state.accountingCursor===undefined)state.accountingCursor=state.totalWeeks===0?0:state.ledger.length;
   state.balanceFC+=amount;
   if(amount>0) state.yearlyIncomeFC+=amount;
   else state.yearlyExpensesFC-=amount;
-  state.ledger.push({week:state.totalWeeks,amount,category});
+  state.ledger.push({week:state.totalWeeks,amount,category,phase});
 }
-function pay(state,cost,category) {
+function pay(state,cost,category,phase='action') {
   if(state.balanceFC<cost) return false;
-  transaction(state,-cost,category);
+  transaction(state,-cost,category,phase);
   return true;
 }
-export function createInitialState(seed=73,difficulty='challenge') {
+export function createInitialState(seed=73,difficulty='standard') {
   return {
-    version:5,difficulty:DIFFICULTIES[difficulty]?difficulty:'challenge',rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
+    version:5,difficulty:DIFFICULTIES[difficulty]?difficulty:'standard',rng:seed,seed,totalWeeks:0,paused:true,speed:1,status:'playing',
     balanceFC:12000,previousYearEndBalanceFC:12000,yearlyIncomeFC:0,yearlyExpensesFC:0,
     decliningBalanceYears:0,shortfallWeeks:0,sustainableYears:0,awareness:38,evidence:0,
     patches:PATCHES.map(patch=>({...patch,health:78,vaccinated:0,populationRemainder:0,lastAdversity:null})),
-    links:LINKS.map(link=>({...link,agreement:false,agreementDue:null,bridgeDue:null,built:false,condition:100,planted:false,age:0,survival:100,crossings:0})),
+    links:LINKS.map(link=>({...link,agreement:false,agreementDue:null,bridgeDue:null,bridgeRemainingWeeks:null,built:false,condition:100,planted:false,age:0,survival:100,crossings:0})),
     services:{outreach:false,monitoring:false,nursery:false,health:false,fireWatch:false},programTimers:{},reportWork:0,fundraisers:[],cooldowns:{},
-    annualReports:[],ledger:[],events:[],eventCounter:0,crossingCount:0,monkeyCount:5000,
+    annualReports:[],ledger:[],lastWeek:null,events:[],eventCounter:0,crossingCount:0,monkeyCount:5000,
     lastFunded:true,adversityHistory:[],nextAdversity:{type:'yellow-fever',week:78,patchId:'a'},
     wildlife:{canopy:100,ground:100,birds:100,amphibians:100,pollinators:100}
   };
@@ -87,13 +90,60 @@ export function reachable(state,start,matureOnly=false) {
   }
   return seen;
 }
-export function weeklyCost(state) {
-  const base=105+state.links.filter(link=>link.agreement).length*9+state.links.filter(link=>link.built).length*15+state.links.filter(link=>link.planted).length*16+Object.entries(SERVICES).reduce((sum,[name,cost])=>sum+(state.services[name]?cost:0),0);
-  return Math.round(base*getDifficulty(state).operations);
+function operationLines(state) {
+  return [
+    {category:'Base operations',baseFC:105},
+    {category:'Land agreements',baseFC:state.links.filter(link=>link.agreement).length*9},
+    {category:'Bridge upkeep',baseFC:state.links.filter(link=>link.built).length*15},
+    {category:'Planting care',baseFC:state.links.filter(link=>link.planted).length*16},
+    ...Object.entries(SERVICES).map(([name,cost])=>({category:PROGRAMS[name].label,baseFC:state.services[name]?cost:0}))
+  ];
 }
-export function weeklySupport(state) {
-  return Math.floor((Math.max(0,state.awareness-35)*1.4+(state.awareness>=65?state.links.filter(matureLink).length*35:0))*getDifficulty(state).income);
+function supportLines(state) {
+  return [
+    {category:'Community trust',baseFC:Math.max(0,state.awareness-SUPPORT_RATES.trustThreshold)*SUPPORT_RATES.trustPerPoint},
+    {category:'Mature corridors',baseFC:state.awareness>=SUPPORT_RATES.corridorTrust?state.links.filter(matureLink).length*SUPPORT_RATES.perMatureCorridor:0}
+  ];
 }
+export function weeklyCost(state) {return Math.round(operationLines(state).reduce((sum,line)=>sum+line.baseFC,0)*getDifficulty(state).operations);}
+export function weeklySupport(state) {return Math.floor(supportLines(state).reduce((sum,line)=>sum+line.baseFC,0)*getDifficulty(state).income);}
+export function weeklyBudget(state) {
+  const difficulty=getDifficulty(state),costFC=weeklyCost(state),supportFC=weeklySupport(state);
+  const expenses=operationLines(state).map(line=>({...line,scaledFC:line.baseFC*difficulty.operations}));
+  const income=supportLines(state).map(line=>({...line,scaledFC:line.baseFC*difficulty.income}));
+  let cumulativeBase=0,allocatedFC=0;
+  const items=expenses.map(line=>{
+    cumulativeBase+=line.baseFC;
+    const cumulativeFC=Math.round(cumulativeBase*difficulty.operations),amount=cumulativeFC-allocatedFC;
+    allocatedFC=cumulativeFC;
+    return {label:line.category,base:line.baseFC,amount};
+  });
+  const grant=state.fundraisers.find(campaign=>campaign.id==='grant'&&!campaign.completed);
+  const awardFC=fundingAward(state,'grant'),firstInstallmentFC=Math.round(awardFC/2);
+  return {
+    items,
+    cost:costFC,support:supportFC,net:supportFC-costFC,burn:costFC-supportFC,
+    operationsMultiplier:difficulty.operations,incomeMultiplier:difficulty.income,
+    rounding:'Operations round once on the total; item amounts allocate that integer bill cumulatively. Support floors once on the total. Raw scaled lines and rounding adjustments are available separately.',
+    supportInputs:{...SUPPORT_RATES,trust:state.awareness,matureCorridors:state.links.filter(matureLink).length,
+      trustBaseFC:income[0].baseFC,corridorBaseFC:income[1].baseFC,
+      explanation:'floor((max(0, trust - 35) × 2.8 + (trust >= 65 ? mature corridors × 35 : 0)) × income multiplier)'},
+    difficulty:{id:DIFFICULTIES[state.difficulty]?state.difficulty:'standard',...difficulty},
+    expenses,income,costFC,supportFC,netFC:supportFC-costFC,burnFC:costFC-supportFC,
+    expenseRoundingFC:costFC-expenses.reduce((sum,line)=>sum+line.scaledFC,0),
+    incomeRoundingFC:supportFC-income.reduce((sum,line)=>sum+line.scaledFC,0),
+    runwayWeeks:costFC>supportFC?Math.floor(state.balanceFC/(costFC-supportFC)):Infinity,
+    grant:{awardFC,firstInstallmentFC,finalInstallmentFC:awardFC-firstInstallmentFC,
+      reviewWeeks:FUNDRAISERS.grant.duration,reportDelayWeeks:13,reportWeeksRequired:4,
+      cooldownWeeks:FUNDRAISERS.grant.cooldown,minimumCycleWeeks:FUNDRAISERS.grant.duration+13+FUNDRAISERS.grant.cooldown,
+      eligible:state.evidence>=GRANT_REQUIREMENTS.evidence&&state.awareness>=GRANT_REQUIREMENTS.trust,
+      phase:grant?(grant.firstPaid?'reporting':'review'):'idle',
+      dueWeek:grant?.due??null,reportWeeksDone:grant?.firstPaid?Math.min(4,state.reportWork-grant.reportBaseline):0,
+      readyWeek:grant?null:state.cooldowns.grant||0,
+      explanation:'Awards are not recurring support. Half pays after 16-week review if still eligible; the remainder waits at least 13 more weeks and four NEW paid monitoring weeks after the first payment. Reporting occupies the fundraising team; the 52-week renewal cooldown starts only after the final payment. No automatic cash rescue.'}
+  };
+}
+export const weeklyBudgetBreakdown = weeklyBudget;
 export function corridorGrowth(link) {
   return link.planted?Math.min(1,link.age/TREE_MATURITY_WEEKS)*link.survival/100:0;
 }
@@ -111,6 +161,7 @@ export function getMetrics(state) {
     capacity:state.patches.reduce((sum,patch)=>sum+habitatCapacity(state,patch),0),
     health:Math.round(state.patches.reduce((sum,patch)=>sum+patch.health,0)/6),population,
     families:state.patches.filter(patch=>patch.population>=4).length,
+    populationChange:state.lastWeek?.population?.change??0,
     cost,support,burn:cost-support,runway:cost>support?Math.floor(state.balanceFC/(cost-support)):Infinity};
 }
 const result=(state,ok,message)=>({state,ok,message});
@@ -133,6 +184,7 @@ export function applyTool(oldState,tool,id) {
     if(state.links.some(entry=>entry.bridgeDue)) return result(oldState,false,'Your construction crew is busy.');
     if(!pay(state,link.cost,'Bridge construction')) return result(oldState,false,`Need ${link.cost} FC. Keep enough for weekly bills.`);
     link.bridgeDue=state.totalWeeks+16;
+    link.bridgeRemainingWeeks=16;
   } else if(tool==='restore') {
     if(!activeLink(link)) return result(oldState,false,'Complete and maintain this bridge before adding tree cover.');
     if(link.planted) return result(oldState,false,'This corridor is already planted.');
@@ -212,13 +264,35 @@ export function applyAdversity(oldState,type,patchId) {
   if(oldState.status!=='playing')return oldState;
   const state=clone(oldState);damageLandscape(state,type,patchId);return state;
 }
+function populationFactors(state,patch,funded) {
+  const capacity=habitatCapacity(state,patch),connected=reachable(state,patch.id).size;
+  const crowding=patch.population/Math.max(1,capacity),isolationMultiplier=connected>1?1:.55;
+  const birthRate=funded&&patch.health>=50?.0045*getDifficulty(state).growth*Math.max(0,1-crowding)*isolationMultiplier:0;
+  const mortality={baseline:.00035,isolation:connected===1?.00035:0,poorHealth:Math.max(0,65-patch.health)*.000025,unfunded:funded?0:.004,overCapacity:Math.max(0,crowding-1)*.006};
+  const deathRate=Math.min(.06,Object.values(mortality).reduce((sum,rate)=>sum+rate,0));
+  return {id:patch.id,name:patch.name,population:patch.population,capacity,health:patch.health,connected,
+    funded,crowding,isolationMultiplier,growthMultiplier:getDifficulty(state).growth,birthRate,deathRate,mortality,
+    expectedBirths:patch.population*birthRate,expectedDeaths:patch.population*deathRate,
+    expectedNaturalChange:patch.population*(birthRate-deathRate),remainder:patch.populationRemainder};
+}
+export function getPopulationExplanation(state) {
+  const funded=state.balanceFC+weeklySupport(state)>=weeklyCost(state);
+  const patches=state.patches.map(patch=>populationFactors(state,patch,funded));
+  return {funded,patches,population:patches.reduce((sum,patch)=>sum+patch.population,0),
+    capacity:patches.reduce((sum,patch)=>sum+patch.capacity,0),
+    expectedBirths:patches.reduce((sum,patch)=>sum+patch.expectedBirths,0),
+    expectedDeaths:patches.reduce((sum,patch)=>sum+patch.expectedDeaths,0),
+    expectedNaturalChange:patches.reduce((sum,patch)=>sum+patch.expectedNaturalChange,0),
+    lastWeek:state.lastWeek?.population??null,
+    explanation:'Current-condition estimate, not a promise: paid operations and health >= 50 permit births; crowding limits recovery and isolated groves multiply births by 0.55. Low health, isolation, overcrowding and unpaid operations add mortality. Fractional net changes carry between weeks; migration redistributes without creating tamarins. Threat deaths are separate from natural change. Growing planted cover raises capacity gradually; mature cover improves health. Upcoming awards, damage and habitat changes are excluded from this estimate.'};
+}
 function updatePopulation(state,funded) {
+  const changes=[];
   for(const patch of state.patches){
-    const capacity=habitatCapacity(state,patch),connected=reachable(state,patch.id).size;
-    const birthRate=funded&&patch.health>=50?.0045*getDifficulty(state).growth*Math.max(0,1-patch.population/Math.max(1,capacity))*(connected>1?1:.55):0;
-    const deathRate=Math.min(.06,.00035+(connected===1?.00035:0)+Math.max(0,65-patch.health)*.000025+(funded?0:.004)+Math.max(0,patch.population/Math.max(1,capacity)-1)*.006);
+    const factors=populationFactors(state,patch,funded),{birthRate,deathRate}=factors;
     const change=patch.population*(birthRate-deathRate)+patch.populationRemainder;
     const whole=Math.trunc(change);patch.population=Math.max(0,patch.population+whole);patch.populationRemainder=change-whole;
+    changes.push({...factors,naturalChange:whole,migration:0});
     patch.vaccinated=Math.max(0,Math.min(.95,patch.vaccinated*(1-Math.max(0,birthRate))+(funded&&state.services.health?.012:0)));
   }
   for(const link of state.links.filter(activeLink)){
@@ -227,39 +301,55 @@ function updatePopulation(state,funded) {
     const donor=difference>0?from:to,receiver=difference>0?to:from;
     const migrants=Math.min(donor.population,Math.floor(Math.abs(difference)*donor.population*.01));
     donor.population-=migrants;receiver.population+=migrants;
+    changes.find(patch=>patch.id===donor.id).migration-=migrants;
+    changes.find(patch=>patch.id===receiver.id).migration+=migrants;
   }
+  return changes;
 }
 export function simulateOneWeek(oldState) {
   if(oldState.paused||oldState.status!=='playing')return oldState;
-  const state=clone(oldState);state.totalWeeks+=1;
+  const state=clone(oldState);
+  const ledgerStart=oldState.lastWeek?.ledgerEnd??oldState.accountingCursor??(oldState.totalWeeks===0?0:oldState.ledger.length);
+  const openingBalanceFC=oldState.balanceFC-oldState.ledger.slice(ledgerStart).reduce((sum,entry)=>sum+entry.amount,0);
+  const openingPopulation=state.patches.reduce((sum,patch)=>sum+patch.population,0),adversityStart=state.adversityHistory.length;
+  state.totalWeeks+=1;
   for(const campaign of state.fundraisers) {
     if(campaign.completed||campaign.due>state.totalWeeks)continue;
     const config=FUNDRAISERS[campaign.id];
     if(campaign.id==='grant'&&campaign.firstPaid){
       if(state.reportWork-campaign.reportBaseline<4){campaign.due=state.totalWeeks+1;continue;}
-      transaction(state,fundingAward(state,campaign.id)/2,'Evidence grant final installment');campaign.completed=true;
+      transaction(state,fundingAward(state,campaign.id)-Math.round(fundingAward(state,campaign.id)/2),'Evidence grant final installment','settlement');campaign.completed=true;
       state.cooldowns.grant=state.totalWeeks+config.cooldown;
-      event(state,'Grant report accepted. Final installment received; renewal cooldown begins.','income');continue;
+      event(state,`Grant report accepted. Final installment received; renewal available in ${config.cooldown} weeks.`,'income');continue;
     }
     campaign.completed=true;
     const approved=campaign.id!=='grant'||(state.evidence>=GRANT_REQUIREMENTS.evidence&&state.awareness>=GRANT_REQUIREMENTS.trust);
     const payout=approved?Math.round(fundingAward(state,campaign.id)*(campaign.id==='grant' ? .5 : campaign.id==='appeal'?1:(.7+state.awareness/200)*(.85+random(state)*.3))):0;
     if(campaign.id==='grant'&&approved){campaign.firstPaid=true;campaign.completed=false;campaign.reportBaseline=state.reportWork;campaign.due=state.totalWeeks+13;}
     else state.cooldowns[campaign.id]=state.totalWeeks+config.cooldown;
-    transaction(state,payout,config.label);
-    event(state,`${config.label}: ${payout?`+${payout} FC received`:'declined: eligibility fell during review'}.`,payout?'income':'warning');
+    transaction(state,payout,config.label,'settlement');
+    event(state,`${config.label}: ${payout?`+${payout} FC received`:'declined: eligibility fell during review'}.${campaign.id==='grant'&&approved?' Half remains: wait at least 13 weeks and complete four new paid monitoring weeks. Fundraising team stays busy until reporting finishes.':''}`,payout?'income':'warning');
   }
-  transaction(state,weeklySupport(state),'Recurring supporters');
-  const funded=pay(state,weeklyCost(state),'Weekly operations');
+  const budget=weeklyBudget(state);
+  transaction(state,weeklySupport(state),'Recurring supporters','settlement');
+  const funded=pay(state,weeklyCost(state),'Weekly operations','settlement');
   state.lastFunded=funded;
   state.shortfallWeeks=funded?0:state.shortfallWeeks+1;
-  if(!funded&&state.balanceFC>0)transaction(state,-state.balanceFC,'Partial operations payment');
+  if(!funded){
+    if(state.balanceFC>0)transaction(state,-state.balanceFC,'Partial operations payment','settlement');
+    if(state.shortfallWeeks===1)event(state,`Weekly bills need ${budget.cost} FC; available cash including ${budget.support} FC recurring support was insufficient. Operations are not fully funded: care and births stop, mortality rises. Pending awards are not cash.`,'warning');
+  }
   state.awareness=bound(state.awareness+(funded && state.services.outreach ? .95 : -.25));
   if(funded&&state.services.monitoring){state.evidence=Math.min(100,state.evidence+.9);state.reportWork+=1;}
   const nurseryAreas=state.services.nursery&&funded?state.links.filter(link=>link.planted).sort((first,second)=>first.survival-second.survival).slice(0,2):[];
   for(const link of state.links) {
     if(link.agreementDue&&link.agreementDue<=state.totalWeeks){link.agreement=true;link.agreementDue=null;event(state,`${link.name}: agreement signed.`,'community');}
-    if(funded&&link.bridgeDue&&link.bridgeDue<=state.totalWeeks){link.bridgeDue=null;link.built=true;event(state,`${link.name}: bridge opened.`,'build');}
+    if(link.bridgeDue!==null&&!link.built){
+      const remaining=link.bridgeRemainingWeeks??Math.max(0,link.bridgeDue-oldState.totalWeeks);
+      link.bridgeRemainingWeeks=Math.max(0,remaining-(funded?1:0));
+      link.bridgeDue=state.totalWeeks+link.bridgeRemainingWeeks;
+      if(funded&&link.bridgeRemainingWeeks===0){link.bridgeDue=null;link.bridgeRemainingWeeks=null;link.built=true;event(state,`${link.name}: bridge opened.`,'build');}
+    }
     if(link.built)link.condition=bound(link.condition-(funded ? .06 : 2.5));
     if(link.planted){if(funded)link.age+=1;link.survival=bound(link.survival+(nurseryAreas.includes(link) ? .35 : funded ? -.015 : -1.1));}
     if(activeLink(link)&&state.totalWeeks%13===0&&state.services.monitoring&&funded&&random(state)>.35){link.crossings+=1;state.crossingCount+=1;}
@@ -271,7 +361,19 @@ export function simulateOneWeek(oldState) {
     const sequence=['yellow-fever','construction','wildfire','drought','storm'];
     state.nextAdversity={type:sequence[(sequence.indexOf(state.nextAdversity.type)+1)%sequence.length],week:state.totalWeeks+78+Math.floor(random(state)*52),patchId:PATCHES[Math.floor(random(state)*6)].id};
   }
-  updatePopulation(state,funded);
+  const populationPatches=updatePopulation(state,funded);
+  const ledger=state.ledger.slice(ledgerStart).map(entry=>({...entry}));
+  const incomeFC=ledger.reduce((sum,entry)=>sum+Math.max(0,entry.amount),0),expensesFC=ledger.reduce((sum,entry)=>sum-Math.min(0,entry.amount),0);
+  const categories=[...new Set(ledger.map(entry=>entry.category))].map(category=>({category,
+    incomeFC:ledger.filter(entry=>entry.category===category).reduce((sum,entry)=>sum+Math.max(0,entry.amount),0),
+    expensesFC:ledger.filter(entry=>entry.category===category).reduce((sum,entry)=>sum-Math.min(0,entry.amount),0)}));
+  const closingPopulation=state.patches.reduce((sum,patch)=>sum+patch.population,0);
+  state.lastWeek={week:state.totalWeeks,openingBalanceFC,closingBalanceFC:state.balanceFC,incomeFC,expensesFC,netFC:incomeFC-expensesFC,
+    ledgerStart,ledgerEnd:state.ledger.length,ledger,categories,budget,operationsDueFC:budget.cost,operationsPaidFC:funded?budget.cost:ledger.filter(entry=>entry.category==='Partial operations payment').reduce((sum,entry)=>sum-entry.amount,0),funded,
+    population:{opening:openingPopulation,closing:closingPopulation,change:closingPopulation-openingPopulation,
+      adversityDeaths:state.adversityHistory.slice(adversityStart).reduce((sum,entry)=>sum+entry.deaths,0),
+      naturalChange:populationPatches.reduce((sum,patch)=>sum+patch.naturalChange,0),patches:populationPatches}};
+  delete state.accountingCursor;
   const metrics=getMetrics(state);state.monkeyCount=metrics.population;
   state.wildlife={canopy:Math.round(70+metrics.health*.3+metrics.mature*3),ground:100+metrics.mature*2,birds:100+metrics.mature*4,amphibians:Math.round(65+metrics.health*.4),pollinators:100+metrics.restored*3};
   if(state.totalWeeks%52===0)settleYear(state);

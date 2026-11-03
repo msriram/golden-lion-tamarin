@@ -12,6 +12,15 @@ test('team timeline shows seven dated milestones in chronological order',()=>{
   assert.equal((timeline.match(/class="milestone planned"/g)||[]).length,2);
   assert.match(timeline,/Rainforest Rangers/);
 });
+test('Rainforest Rangers remains the team with a worldwide mission and Tamarin Trails as its first project',()=>{
+  const august=team.match(/<time datetime="2026-08">([\s\S]*?)<\/li>/)?.[1];
+  assert.ok(august,'August milestone is present');
+  assert.match(august,/<strong>Rainforest Rangers<\/strong> as our team name, and that is still who we are/);
+  assert.match(august,/protect rainforests around the world/);
+  assert.match(august,/Tamarin Trails is our first conservation project/);
+  assert.match(august,/Brazil’s Atlantic Forest/);
+  assert.doesNotMatch(team,/Our conservation project later became/);
+});
 test('design and campaign remain concepts and planned work, not deployed wildlife infrastructure',()=>{
   assert.match(team,/Tabletop model/);assert.match(team,/not a field-ready wildlife bridge/);
   assert.match(team,/id="november-campaign"/);assert.match(team,/Planned launch: November 7, 2026/);

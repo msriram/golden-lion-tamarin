@@ -1,13 +1,14 @@
-import {PROGRAMS,FUNDRAISERS,applyTool,toggleService,startFundraiser,simulateOneWeek,getMetrics,plantingSeason} from './game-core.js';
+import {PROGRAMS,FUNDRAISERS,applyTool,toggleService,startFundraiser,simulateOneWeek,getMetrics,plantingSeason,weeklyBudget,getPopulationExplanation} from './game-core.js';
 
 const routes=['ab','ad','be','ef','bc'];
-export function getTutorialStep(state){
-  if(state.status!=='playing')return {kind:'done',title:state.status==='won'?'A recovering population!':'Try a fresh conservation plan',copy:state.status==='won'?'You grew the simulated population to 10,000 through habitat restoration and ongoing protection. Try Explorer or Challenge to make these decisions yourself.':'Reset the tutorial and follow the next-step guidance before expanding.',button:'Tutorial finished'};
+export function getRecommendedStep(state){
+  if(state.status!=='playing')return {kind:'done',title:state.status==='won'?'A recovering population!':'Try a fresh conservation plan',copy:state.status==='won'?'You grew the simulated population to 10,000 through habitat restoration and ongoing protection. Try Standard for an intermediate campaign, or Challenge for tighter reserves.':'Reset and follow the next-step guidance before expanding.',button:'Campaign finished'};
   const untilThreat=state.nextAdversity.week-state.totalWeeks;
+  const teaching=state.difficulty==='tutorial';
   const desired={
     outreach:state.awareness<(state.services.outreach?98:88),
     monitoring:state.evidence<25||state.fundraisers.some(entry=>entry.id==='grant'&&!entry.completed),
-    nursery:state.links.some(link=>link.planted&&(!state.tutorialLessons?.includes('nursery')||link.survival<(state.services.nursery?96:82))),
+    nursery:state.links.some(link=>link.planted&&((teaching&&!state.tutorialLessons?.includes('nursery'))||link.survival<(state.services.nursery?96:82))),
     health:state.nextAdversity.type==='yellow-fever'&&untilThreat<=39,
     fireWatch:state.nextAdversity.type==='wildfire'&&untilThreat<=13
   };
@@ -17,23 +18,25 @@ export function getTutorialStep(state){
   }
   if(!state.fundraisers.some(entry=>!entry.completed)){
     for(const id of ['grant','scienceFair','artShow','presentation','appeal']){
-      if(startFundraiser(state,id).ok)return {kind:'fundraiser',id,title:`Organize ${FUNDRAISERS[id].label.toLowerCase()}`,copy:id==='grant'?'Your monitoring evidence and community trust now qualify. The grant pays half after review; the rest waits for a fresh monitoring report. Bills continue while you wait.':'Fundraising takes time and uses one team. Start now, while reserves still cover weekly bills; each audience needs a cooldown after completion.',button:'Start fundraising'};
+      if(startFundraiser(state,id).ok)return {kind:'fundraiser',id,title:`Organize ${FUNDRAISERS[id].label.toLowerCase()}`,copy:id==='grant'?weeklyBudget(state).grant.explanation:'Fundraising takes time and uses one team. Start now, while reserves still cover weekly bills; each audience needs a cooldown after completion.',button:'Start fundraising'};
     }
   }
   for(const link of state.links){
-    if(link.built&&(link.condition<60||(!state.tutorialLessons?.includes('repair')&&link.condition<85)||(link.planted&&link.survival<70))&&state.balanceFC>1000)return {kind:'route',tool:'repair',id:link.id,title:`Care for ${link.name}`,copy:'Repair and replant before the bridge closes or tree survival drops too far. Protect existing habitat before buying a new project.',button:'Repair & replant'};
+    if(link.built&&(link.condition<60||(teaching&&!state.tutorialLessons?.includes('repair')&&link.condition<85)||(link.planted&&link.survival<70))&&state.balanceFC>1000)return {kind:'route',tool:'repair',id:link.id,title:`Care for ${link.name}`,copy:'Repair and replant before the bridge closes or tree survival drops too far. Protect existing habitat before buying a new project.',button:'Repair & replant'};
   }
   const link=routes.map(id=>state.links.find(entry=>entry.id===id)).find(entry=>!entry.planted);
   if(link){
-    const reserve=4000;
+    const reserve=state.difficulty==='challenge'||state.difficulty==='expert'?5500:4000;
     if(!link.agreement&&!link.agreementDue&&state.balanceFC>reserve+600&&state.awareness>=30)return {kind:'route',tool:'agreement',id:link.id,title:`Negotiate ${link.name}`,copy:'Ask landowners before building. The agreement costs 600 FC, takes 12 weeks, and adds a recurring obligation. Keep a cash reserve.',button:'Negotiate land access'};
     if(link.agreement&&!link.built&&!link.bridgeDue&&!state.links.some(entry=>entry.bridgeDue)&&state.balanceFC>reserve+link.cost)return {kind:'route',tool:'bridge',id:link.id,title:`Build ${link.name}`,copy:`Land access is signed. Pay ${link.cost.toLocaleString()} FC to start a 16-week construction job. The bridge connects groves, but planting will create more habitat.`,button:'Build bridge'};
     if(link.built&&!link.planted&&plantingSeason(state)&&state.balanceFC>reserve+1200)return {kind:'route',tool:'restore',id:link.id,title:`Grow forest along ${link.name}`,copy:'The bridge is open and the wet-season planting window is here. Plant native trees for 1,200 FC. Cover expands gradually; mature corridors take four funded years.',button:'Plant native trees'};
   }
   const metrics=getMetrics(state);
+  const budget=weeklyBudget(state),population=getPopulationExplanation(state);
   const work=state.links.find(entry=>entry.bridgeDue||entry.agreementDue);
-  return {kind:'wait',title:work?'Give fieldwork time':'Review recovery and let the forest grow',copy:`${work?`${work.name} is ${work.bridgeDue?'under construction':'being negotiated'}. `:''}${metrics.population.toLocaleString()} tamarins; habitat capacity ${metrics.capacity.toLocaleString()}. Advance to the next decision (up to 13 weeks). Watch cooldowns, grant reporting, seasonal planting, and threats—not just the bridge animation.`,button:'Advance to next decision'};
+  return {kind:'wait',title:work?'Give fieldwork time':'Review recovery and let the forest grow',copy:`${work?`${work.name} is ${work.bridgeDue?'under construction':'being negotiated'}. `:''}${metrics.population.toLocaleString()} tamarins; habitat capacity ${metrics.capacity.toLocaleString()}. Weekly support ${budget.support} minus bills ${budget.cost} = ${budget.net} FC, excluding awards and one-off purchases. Current habitat predicts ${population.expectedNaturalChange.toFixed(1)} natural population change per week before threats; crowding, isolation and unpaid care limit births. Advance to the next decision (up to 13 weeks). Watch cooldowns, grant reporting, seasonal planting, and threats—not just the bridge animation.`,button:'Advance to next decision'};
 }
+export const getTutorialStep = getRecommendedStep;
 
 export function performTutorialStep(oldState){
   if(oldState.difficulty!=='tutorial'||oldState.status!=='playing')return {state:oldState,ok:false,message:'Guided steps are available in an active tutorial. Choose Guided tutorial and New game to begin.'};
