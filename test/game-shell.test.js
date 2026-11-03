@@ -6,6 +6,10 @@ test('game is a standalone application without website article framing',async()=
   const html=await readFile(new URL('../game.html',import.meta.url),'utf8');
   assert.doesNotMatch(html,/class="site-header"|class="site-footer"|class="game-intro|data-hud=|data-finance/);
   assert.match(html,/data-fullscreen/);assert.match(html,/data-budget-open/);
+  assert.match(html,/data-map-zoom-in/);assert.match(html,/data-map-zoom-out/);assert.match(html,/data-map-fit/);
+  const styles=await readFile(new URL('../game-shell.css',import.meta.url),'utf8');
+  assert.match(styles,/\.game-frame\s*\{[^}]*max-width:none/);
+  assert.match(styles,/\.map-scroll\s*\{[^}]*touch-action:none/);
   const left=html.match(/<aside class="game-stats"[^>]*>([\s\S]*?)<\/aside>/)[1];
   assert.ok(left.indexOf('Threat watch')<left.indexOf('Funding desk'));
   assert.doesNotMatch(left,/Weekly budget|Calendar/);

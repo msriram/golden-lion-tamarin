@@ -3,11 +3,13 @@ import {terrainArtwork} from './terrain.js';
 import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js';
 import {createPlayerStore,rankScores} from './game-players.js';
 import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js';
+import {attachMapViewport} from './map-viewport.js';
 
 let browserStorage;
 try{browserStorage=window.localStorage;}catch{}
 const players=createPlayerStore(browserStorage);
 const map=document.querySelector('[data-game-map]');
+let mapView;
 const dialog=document.querySelector('[data-report-dialog]');
 function prepareCampaign(saved){
   const campaign=saved||createInitialState();
@@ -93,6 +95,7 @@ function renderInspector(){
   for(const [label,value] of fields){const item=document.createElement('div'),term=document.createElement('dt'),detail=document.createElement('dd');term.textContent=label;detail.textContent=value;item.append(term,detail);status.append(item);}
 }
 function renderMap(){
+  if(mapView?.interacting)return;
   const focus=document.activeElement?.dataset.route;
   const patchFocus=document.activeElement?.dataset.patch;
   map.innerHTML=terrainArtwork();
@@ -269,9 +272,7 @@ document.querySelector('[data-tutorial-next]').addEventListener('click',()=>{
 map.addEventListener('click',event=>{if(!event.target.closest('[data-route], [data-patch]')){message(`Choose a named route to ${toolNames[tool].toLowerCase()}, or a forest grove to see its connected routes.`);revealSelection();}});
 dialog.addEventListener('close',()=>{if(state.status==='playing'&&dialog.returnValue==='continue'&&state.difficulty!=='tutorial'){state.paused=false;clock();render();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){state.paused=true;clock();save();render();}});
-const mapHost=document.querySelector('.map-scroll');
-function fitMap(){const bounds=mapHost.getBoundingClientRect();document.querySelector('.map-wrap').style.width=`${Math.max(0,Math.floor(Math.min(bounds.width,bounds.height*1000/660)))}px`;}
-const mapObserver=new ResizeObserver(fitMap);mapObserver.observe(mapHost);
+mapView=attachMapViewport(document.querySelector('.map-scroll'),document.querySelector('.map-wrap'),document.querySelector('.map-controls'));
 function openPanel(panel){
   state.paused=true;clock();save();render();
   if(!panel.open)panel.showModal();
@@ -282,7 +283,7 @@ document.querySelector('[data-fullscreen]').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else message('This browser does not support full screen. The game already fills its window.','error');}
   catch{message('Full screen was blocked by the browser. You can keep playing in this window.','error');}
 });
-document.addEventListener('fullscreenchange',()=>{document.querySelector('[data-fullscreen]').textContent=document.fullscreenElement?'Exit full screen':'Full screen';fitMap();});
+document.addEventListener('fullscreenchange',()=>{document.querySelector('[data-fullscreen]').textContent=document.fullscreenElement?'Exit full screen':'Full screen';requestAnimationFrame(()=>mapView.resize());});
 function refreshProfileList(){
   const list=document.querySelector('[data-player-list]');list.replaceChildren();
   for(const profile of players.profiles()){
@@ -382,4 +383,4 @@ document.querySelector('[data-withdraw-form]').addEventListener('submit',async e
   finally{button.disabled=false;}
 });
 document.querySelector('[data-report-share]').addEventListener('click',syncCompletedScore);
-render();fitMap();clock();save();refreshOnlineControls();
+render();mapView.resize();clock();save();refreshOnlineControls();
