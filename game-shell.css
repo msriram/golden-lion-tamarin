@@ -16,6 +16,21 @@
 .resource-item dd { font-size:clamp(.95rem,1.3vw,1.35rem); white-space:nowrap; }
 .resource-item small { font-size:.59rem; }
 .budget-resource button { min-height:0; padding:1px 4px; background:#efdfad; border:0; color:#173d30; border-radius:3px; font:inherit; cursor:pointer; }
+.cashflow-bar { display:grid; flex-shrink:0; grid-template-columns:150px 1fr 1fr 1.2fr; min-height:58px; color:#173d30; background:#f5edda; border-bottom:1px solid #9aa482; font-variant-numeric:tabular-nums; }
+.cashflow-heading, .cashflow-lane { min-width:0; padding:.45rem .7rem; border-right:1px solid #c8c6aa; }
+.cashflow-heading { display:grid; grid-template-columns:1fr auto; align-content:center; gap:.1rem .4rem; background:#e5ddc3; }
+.cashflow-heading span, .cashflow-lane span { color:#53634b; font-size:.59rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+.cashflow-heading strong { align-self:center; font-size:.83rem; }
+.cashflow-heading button { grid-column:1/-1; justify-self:start; padding:0; border:0; color:#315a42; background:none; cursor:pointer; font:inherit; font-size:.61rem; font-weight:600; line-height:1.2; text-decoration:underline; }
+.cashflow-lane { display:grid; align-content:center; grid-template-columns:auto 1fr; gap:.05rem .45rem; }
+.cashflow-lane strong { justify-self:end; font-size:.85rem; white-space:nowrap; }
+.cashflow-lane small { grid-column:1/-1; overflow:hidden; color:#59634f; font-size:.59rem; line-height:1.3; text-overflow:ellipsis; white-space:nowrap; }
+.cashflow-lane.income { border-top:3px solid #4f8559; }
+.cashflow-lane.expense { border-top:3px solid #b65f3d; }
+.cashflow-lane.latest { border-top:3px solid #c28d35; }
+.cashflow-bar [data-tone="income"] { color:#24643b; }
+.cashflow-bar [data-tone="expense"] { color:#9b3f2a; }
+.cashflow-bar [data-tone="neutral"] { color:#53634b; }
 .game-layout { flex:1; min-height:0; display:grid; grid-template-columns:235px minmax(0,1fr) 280px; grid-template-rows:minmax(0,1fr); align-items:stretch; overflow:hidden; }
 .game-stats, .game-sidebar { grid-column:auto; grid-row:auto; position:static; align-self:stretch; height:100%; max-height:none; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#829776 #f5f0df; }
 .game-main { display:flex; flex-direction:column; min-height:0; overflow:hidden; padding:.65rem; grid-column:auto; grid-row:auto; }
@@ -92,6 +107,8 @@
   .game-titlebar { flex-wrap:wrap; flex-direction:row; align-items:center; }
   .game-window-controls { width:100%; }
   .resource-bar { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .cashflow-bar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .cashflow-heading, .cashflow-lane { border-bottom:1px solid #c8c6aa; }
   .game-layout { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto auto; overflow:visible; }
   .game-main { grid-column:1/-1; grid-row:1; min-height:690px; border:0; }
   .game-stats, .game-sidebar { grid-row:2; height:auto; max-height:none; overflow:visible; width:auto; }
@@ -112,6 +129,10 @@
   .resource-item dt { min-height:2.5em; font-size:.56rem; }
   .resource-item dd { font-size:.87rem; }
   .resource-item small { font-size:.53rem; }
+  .cashflow-bar { grid-template-columns:1fr; }
+  .cashflow-heading { grid-template-columns:1fr auto auto; }
+  .cashflow-heading button { grid-column:auto; }
+  .cashflow-lane small { white-space:normal; }
   .game-main { padding:.4rem; min-height:0; }
   .map-stage { height:350px; }
   .route-marker { max-width:76px; font-size:.55rem; min-height:34px; }

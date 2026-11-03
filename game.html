@@ -31,6 +31,12 @@
       <div class="resource-item"><dt>Forest cover</dt><dd data-resource="forest">32%</dd><small data-resource-health></small></div>
       <div class="resource-item"><dt>Cash runway</dt><dd data-resource="runway">—</dd><small>Recurring bills only; excludes awards</small></div>
     </dl>
+    <section class="cashflow-bar" data-cashflow-bar aria-label="Campaign money flow" aria-live="polite">
+      <div class="cashflow-heading"><span>Money flow</span><strong data-cashflow-net>—</strong><button type="button" data-cashflow-details>Full ledger</button></div>
+      <div class="cashflow-lane income"><span>↑ Weekly money in</span><strong data-cashflow-in>+0 FC</strong><small data-cashflow-in-detail>No recurring income yet.</small></div>
+      <div class="cashflow-lane expense"><span>↓ Weekly money out</span><strong data-cashflow-out>−0 FC</strong><small data-cashflow-out-detail>No recurring expenses yet.</small></div>
+      <div class="cashflow-lane latest"><span>Latest one-time movement</span><strong data-cashflow-latest-amount>—</strong><small data-cashflow-latest-detail>No transactions yet.</small></div>
+    </section>
     <div class="game-layout">
       <aside class="game-stats" aria-label="Threats and funding">
         <section class="side-panel threat-panel"><h2>Threat watch</h2><p data-threat></p><p class="risk-message" data-risk role="status"></p></section>

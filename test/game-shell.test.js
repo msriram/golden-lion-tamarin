@@ -10,6 +10,8 @@ test('game is a standalone application without website article framing',async()=
   const styles=await readFile(new URL('../game-shell.css',import.meta.url),'utf8');
   assert.match(styles,/\.game-frame\s*\{[^}]*max-width:none/);
   assert.match(styles,/\.map-scroll\s*\{[^}]*touch-action:none/);
+  for(const field of ['cashflow-net','cashflow-in','cashflow-in-detail','cashflow-out','cashflow-out-detail','cashflow-latest-amount','cashflow-latest-detail'])assert.match(html,new RegExp(`data-${field}`));
+  assert.match(html,/Full ledger/);assert.match(html,/Weekly money in/);assert.match(html,/Weekly money out/);assert.match(html,/Latest one-time movement/);
   const left=html.match(/<aside class="game-stats"[^>]*>([\s\S]*?)<\/aside>/)[1];
   assert.ok(left.indexOf('Threat watch')<left.indexOf('Funding desk'));
   assert.doesNotMatch(left,/Weekly budget|Calendar/);

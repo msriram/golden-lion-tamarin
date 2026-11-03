@@ -68,6 +68,35 @@ function renderResources(metrics){
     element.textContent=`${met?'✓':'○'} ${label}: ${Math.floor(value)} / ${target}`;element.classList.toggle('met',met);
   }
 }
+function allocateSupportItems(budget){
+  let cumulativeBase=0,allocatedFC=0;
+  return budget.income.map(item=>{
+    cumulativeBase+=item.baseFC;
+    const cumulativeFC=Math.floor(cumulativeBase*budget.incomeMultiplier),amount=cumulativeFC-allocatedFC;
+    allocatedFC=cumulativeFC;return {label:item.category,amount};
+  });
+}
+function flowDetails(items,direction,empty){
+  const active=items.filter(item=>item.amount>0),visible=active.slice(0,3);
+  if(!visible.length)return empty;
+  const sign=direction==='income'?'+':'−',copy=visible.map(item=>`${item.label} ${sign}${number(item.amount)}`);
+  if(active.length>visible.length)copy.push(`+${active.length-visible.length} more`);
+  return copy.join(' · ');
+}
+function renderCashFlow(){
+  const budget=weeklyBudget(state),incomeItems=allocateSupportItems(budget),expenseItems=budget.items.map(item=>({label:item.label,amount:item.amount}));
+  document.querySelector('[data-cashflow-in]').textContent=`+${number(budget.support)} FC/week`;
+  document.querySelector('[data-cashflow-in-detail]').textContent=flowDetails(incomeItems,'income','No recurring income yet—build community trust.');
+  document.querySelector('[data-cashflow-out]').textContent=`−${number(budget.cost)} FC/week`;
+  document.querySelector('[data-cashflow-out-detail]').textContent=flowDetails(expenseItems,'expense','No recurring expenses.');
+  const net=document.querySelector('[data-cashflow-net]');net.textContent=`${signed(budget.net)} FC/week`;net.dataset.tone=budget.net>0?'income':budget.net<0?'expense':'neutral';
+  const recurring=new Set(['Recurring supporters','Weekly operations','Partial operations payment']);
+  const latest=[...state.ledger].reverse().find(entry=>!recurring.has(entry.category));
+  const amount=document.querySelector('[data-cashflow-latest-amount]'),detail=document.querySelector('[data-cashflow-latest-detail]');
+  if(latest){amount.textContent=signed(latest.amount)+' FC';amount.dataset.tone=latest.amount>0?'income':'expense';detail.textContent=`${latest.category} · ${ledgerDate(latest)}`;}
+  else if(state.lastWeek){amount.textContent=signed(state.lastWeek.netFC)+' FC';amount.dataset.tone=state.lastWeek.netFC>0?'income':state.lastWeek.netFC<0?'expense':'neutral';detail.textContent=`Week ${state.lastWeek.week}: supporters +${number(state.lastWeek.budget.support)} · operations −${number(state.lastWeek.operationsPaidFC)}`;}
+  else{amount.textContent='—';amount.dataset.tone='neutral';detail.textContent='No transactions yet. Weekly forecast shown at left.';}
+}
 function actOnRoute(id){
   selection={type:'route',id};const response=applyTool(state,tool,id);handle(response);
   if(response.ok){
@@ -215,7 +244,7 @@ function render(){
   document.querySelectorAll('[data-tool]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.tool===tool));button.disabled=state.status!=='playing';if(toolCosts[button.dataset.tool])button.querySelector('small').textContent=toolCosts[button.dataset.tool];});
   document.querySelector('[data-wildlife]').innerHTML=Object.entries(state.wildlife).map(([name,value])=>`<div class="wildlife-row"><span>${name}</span><strong>${value-100>=0?'+':''}${value-100}%</strong></div>`).join('');
   document.querySelector('[data-event-log]').innerHTML=state.events.map(entry=>`<li class="${entry.tone}"><time>${entry.week} weeks elapsed</time>${entry.message}</li>`).join('');
-  renderResources(metrics);renderMap();renderFinance(metrics);renderInspector();renderTutorial();
+  renderResources(metrics);renderCashFlow();renderMap();renderFinance(metrics);renderInspector();renderTutorial();
   if(state.status!=='playing'&&!terminalShown){terminalShown=true;report();}
 }
 function report(annual=false){
@@ -279,7 +308,7 @@ function openPanel(panel){
   if(!panel.open)panel.showModal();
 }
 for(const button of document.querySelectorAll('[data-close-dialog]'))button.addEventListener('click',()=>button.closest('dialog').close());
-document.querySelector('[data-budget-open]').addEventListener('click',()=>openPanel(document.querySelector('[data-budget-dialog]')));
+for(const button of document.querySelectorAll('[data-budget-open], [data-cashflow-details]'))button.addEventListener('click',()=>openPanel(document.querySelector('[data-budget-dialog]')));
 document.querySelector('[data-fullscreen]').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else message('This browser does not support full screen. The game already fills its window.','error');}
   catch{message('Full screen was blocked by the browser. You can keep playing in this window.','error');}
