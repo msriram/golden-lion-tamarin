@@ -79,6 +79,14 @@ export function createInitialState(seed=73,difficulty='standard') {
   };
 }
 export function activeLink(link) { return link.built&&link.condition>=45&&link.agreement; }
+export function getTamarinPosition(state){
+  const route=state.links.filter(link=>link.built).sort((first,second)=>(first.bridgeOpenedWeek??-1)-(second.bridgeOpenedWeek??-1))[0];
+  if(!route||!activeLink(route))return null;
+  const from=PATCHES.find(patch=>patch.id===route.from),to=PATCHES.find(patch=>patch.id===route.to);
+  const elapsed=Math.max(0,state.totalWeeks-(route.bridgeOpenedWeek??0));
+  const phase=((elapsed+4)%16)/8,progress=phase<=1?phase:2-phase;
+  return {routeId:route.id,x:from.x+(to.x-from.x)*progress,y:from.y+(to.y-from.y)*progress};
+}
 export function matureLink(link) { return activeLink(link)&&link.planted&&link.age>=TREE_MATURITY_WEEKS&&link.survival>=60; }
 export function reachable(state,start,matureOnly=false) {
   const seen=new Set([start]);
@@ -348,7 +356,7 @@ export function simulateOneWeek(oldState) {
       const remaining=link.bridgeRemainingWeeks??Math.max(0,link.bridgeDue-oldState.totalWeeks);
       link.bridgeRemainingWeeks=Math.max(0,remaining-(funded?1:0));
       link.bridgeDue=state.totalWeeks+link.bridgeRemainingWeeks;
-      if(funded&&link.bridgeRemainingWeeks===0){link.bridgeDue=null;link.bridgeRemainingWeeks=null;link.built=true;event(state,`${link.name}: bridge opened.`,'build');}
+      if(funded&&link.bridgeRemainingWeeks===0){link.bridgeDue=null;link.bridgeRemainingWeeks=null;link.built=true;link.bridgeOpenedWeek=state.totalWeeks;event(state,`${link.name}: bridge opened.`,'build');}
     }
     if(link.built)link.condition=bound(link.condition-(funded ? .06 : 2.5));
     if(link.planted){if(funded)link.age+=1;link.survival=bound(link.survival+(nurseryAreas.includes(link) ? .35 : funded ? -.015 : -1.1));}

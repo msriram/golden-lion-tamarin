@@ -4,6 +4,7 @@ import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-gui
 import {createPlayerStore,rankScores} from './game-players.js';
 import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js';
 import {attachMapViewport} from './map-viewport.js';
+import {getTamarinPosition} from './game-core.js';
 
 let browserStorage;
 try{browserStorage=window.localStorage;}catch{}
@@ -132,9 +133,9 @@ function renderMap(){
     button.addEventListener('click',()=>{selection={type:'patch',id:patch.id};message(`${patch.name} selected. ${tool==='inspect'?'Population and habitat details are shown below.':'Choose a named route to use '+toolNames[tool]+'.'}`);render();revealSelection();});map.append(button);
   }
   const token=document.querySelector('[data-tamarin]');
-  const route=state.links.find(activeLink);
-  if(route){const from=PATCHES.find(patch=>patch.id===route.from),to=PATCHES.find(patch=>patch.id===route.to);const phase=(state.totalWeeks%16)/8;const progress=phase<=1?phase:2-phase;token.style.left=`${from.x+(to.x-from.x)*progress}%`;token.style.top=`${from.y+(to.y-from.y)*progress}%`;}
-  else{token.style.left='13%';token.style.top='28%';}
+  const position=getTamarinPosition(state);
+  token.hidden=!position;
+  if(position){token.style.left=`${position.x}%`;token.style.top=`${position.y}%`;}
   if(focus)map.querySelector(`[data-route="${focus}"]`)?.focus({preventScroll:true});
   else if(patchFocus)map.querySelector(`[data-patch="${patchFocus}"]`)?.focus({preventScroll:true});
 }
