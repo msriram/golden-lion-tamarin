@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMapCamera,attachMapViewport} from '../js/map-viewport.js';
 
-test('map fills wide or tall viewports without stretching and Fit reveals every edge',()=>{
+test('map lays out groves across wide or tall viewports without stretching trees; Fit reveals every edge',()=>{
   for(const [width,height] of [[1400,500],[450,800],[800,528]]){
     const camera=createMapCamera();
     const filled=camera.resize(width,height);
-    assert.ok(filled.scale*1000>=width&&filled.scale*660>=height);
+    assert.ok(Math.abs(filled.scale*1000*filled.layoutX-width)<.001);
+    assert.ok(Math.abs(filled.scale*660*filled.layoutY-height)<.001);
     const fitted=camera.fit();
     assert.ok(fitted.scale*1000<=width+.001&&fitted.scale*660<=height+.001);
     assert.equal(fitted.zoom,1);
@@ -39,7 +40,7 @@ test('fullscreen and orientation resize preserve zoom and the viewed forest cent
 
 function surface(){
   const listeners=new Map();
-  return {clientWidth:1000,clientHeight:660,style:{},textContent:'',classList:{toggle(){}},setPointerCapture(){},getBoundingClientRect:()=>({left:0,top:0}),
+  return {clientWidth:1000,clientHeight:660,style:{setProperty(){}},textContent:'',classList:{toggle(){}},setPointerCapture(){},getBoundingClientRect:()=>({left:0,top:0}),
     addEventListener(name,handler){listeners.set(name,handler);},
     emit(name,values={}){const event={preventDefault(){this.prevented=true;},stopImmediatePropagation(){this.stopped=true;},...values};listeners.get(name)?.(event);return event;}};
 }

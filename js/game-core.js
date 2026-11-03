@@ -4,7 +4,7 @@ export const SUPPORT_RATES = {trustThreshold:35,trustPerPoint:2.8,corridorTrust:
 export const SPEED_INTERVALS_MS = Object.freeze({1:8000,2:4000,4:2000,8:1000,16:500,32:250});
 export const DIFFICULTIES = {
   tutorial:{label:'Guided tutorial',operations:.55,income:1.4,threat:.4,growth:1.4,description:'Step-by-step guidance: 45% lower weekly bills, 40% higher recurring support and awards, 40% faster births, and 60% weaker threat damage.'},
-  explorer:{label:'Explorer',operations:.75,income:1.15,threat:.7,growth:1.15,description:'25% lower weekly bills, 15% higher recurring support and awards, 15% faster births, and 30% weaker threat damage. Make your own conservation decisions.'},
+  explorer:{label:'Explorer',operations:.55,income:1.3,threat:.45,growth:1.25,sponsorWeeklyFC:100,description:'A welcoming first campaign: 45% lower weekly bills, 30% higher recurring support and awards, 25% faster births, and 55% weaker threat damage. A standing sponsor contributes 130 FC every week, included in support. Basic operations start cash-positive; expanding too fast still costs money.'},
   standard:{label:'Standard',operations:.85,income:1.1,threat:.85,growth:1.1,description:'Recommended intermediate: 15% lower weekly bills, 10% higher recurring support and awards, 10% faster births, and 15% weaker threat damage. Fund outreach and monitoring, reserve cash through grant review and reporting, then expand one corridor at a time.'},
   challenge:{label:'Challenge',operations:1,income:1,threat:1,growth:1,description:'Baseline bills, support, awards, births, and threat damage. Recurring supporters reward maintained trust and mature corridors; grants bridge the early deficit, not unlimited expansion. Keep reserves and time protection carefully.'},
   expert:{label:'Expert',operations:1.15,income:.9,threat:1.3,growth:.9,description:'15% higher weekly bills, 10% lower recurring support and awards, 10% slower births, and 30% stronger threat damage. Protection and reserve management are essential.'}
@@ -111,7 +111,8 @@ function operationLines(state) {
 function supportLines(state) {
   return [
     {category:'Community trust',baseFC:Math.max(0,state.awareness-SUPPORT_RATES.trustThreshold)*SUPPORT_RATES.trustPerPoint},
-    {category:'Mature corridors',baseFC:state.awareness>=SUPPORT_RATES.corridorTrust?state.links.filter(matureLink).length*SUPPORT_RATES.perMatureCorridor:0}
+    {category:'Mature corridors',baseFC:state.awareness>=SUPPORT_RATES.corridorTrust?state.links.filter(matureLink).length*SUPPORT_RATES.perMatureCorridor:0},
+    {category:'Standing Explorer sponsor',baseFC:getDifficulty(state).sponsorWeeklyFC||0}
   ];
 }
 export function weeklyCost(state) {return Math.round(operationLines(state).reduce((sum,line)=>sum+line.baseFC,0)*getDifficulty(state).operations);}
@@ -134,9 +135,9 @@ export function weeklyBudget(state) {
     cost:costFC,support:supportFC,net:supportFC-costFC,burn:costFC-supportFC,
     operationsMultiplier:difficulty.operations,incomeMultiplier:difficulty.income,
     rounding:'Operations round once on the total; item amounts allocate that integer bill cumulatively. Support floors once on the total. Raw scaled lines and rounding adjustments are available separately.',
-    supportInputs:{...SUPPORT_RATES,trust:state.awareness,matureCorridors:state.links.filter(matureLink).length,
+    supportInputs:{...SUPPORT_RATES,trust:state.awareness,matureCorridors:state.links.filter(matureLink).length,sponsorBaseFC:income[2].baseFC,
       trustBaseFC:income[0].baseFC,corridorBaseFC:income[1].baseFC,
-      explanation:'floor((max(0, trust - 35) × 2.8 + (trust >= 65 ? mature corridors × 35 : 0)) × income multiplier)'},
+      explanation:'floor((max(0, trust - 35) × 2.8 + (trust >= 65 ? mature corridors × 35 : 0) + standing sponsor base) × income multiplier)'},
     difficulty:{id:DIFFICULTIES[state.difficulty]?state.difficulty:'standard',...difficulty},
     expenses,income,costFC,supportFC,netFC:supportFC-costFC,burnFC:costFC-supportFC,
     expenseRoundingFC:costFC-expenses.reduce((sum,line)=>sum+line.scaledFC,0),

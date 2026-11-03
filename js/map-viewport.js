@@ -1,22 +1,23 @@
 const clamp=(value,minimum,maximum)=>Math.max(minimum,Math.min(maximum,value));
 
 export function createMapCamera(){
-  let width=0,height=0,scale=1,offsetX=0,offsetY=0;
+  let width=0,height=0,scale=1,offsetX=0,offsetY=0,layoutX=1,layoutY=1;
   const minimum=()=>Math.min(width/1000,height/660);
-  const maximum=()=>Math.max(width/1000,height/660)*4;
+  const maximum=()=>minimum()*4;
   function constrain(){
-    offsetX=1000*scale<=width?(width-1000*scale)/2:clamp(offsetX,width-1000*scale,0);
-    offsetY=660*scale<=height?(height-660*scale)/2:clamp(offsetY,height-660*scale,0);
+    offsetX=1000*layoutX*scale<=width?(width-1000*layoutX*scale)/2:clamp(offsetX,width-1000*layoutX*scale,0);
+    offsetY=660*layoutY*scale<=height?(height-660*layoutY*scale)/2:clamp(offsetY,height-660*layoutY*scale,0);
   }
-  function snapshot(){return {width,height,scale,offsetX,offsetY,zoom:scale/minimum()};}
+  function snapshot(){return {width,height,scale,offsetX,offsetY,layoutX,layoutY,zoom:scale/minimum()};}
   function resize(nextWidth,nextHeight){
     if(nextWidth<=0||nextHeight<=0)return snapshot();
-    const centerX=(width/2-offsetX)/scale,centerY=(height/2-offsetY)/scale;
+    const centerX=(width/2-offsetX)/scale/layoutX,centerY=(height/2-offsetY)/scale/layoutY;
     const relativeZoom=width&&height?scale/minimum():null;
     width=nextWidth;height=nextHeight;
-    scale=relativeZoom===null?Math.max(width/1000,height/660):clamp(relativeZoom*minimum(),minimum(),maximum());
-    offsetX=width/2-(relativeZoom===null?500:centerX)*scale;
-    offsetY=height/2-(relativeZoom===null?330:centerY)*scale;
+    layoutX=width/(minimum()*1000);layoutY=height/(minimum()*660);
+    scale=relativeZoom===null?minimum():clamp(relativeZoom*minimum(),minimum(),maximum());
+    offsetX=width/2-(relativeZoom===null?500:centerX)*layoutX*scale;
+    offsetY=height/2-(relativeZoom===null?330:centerY)*layoutY*scale;
     constrain();return snapshot();
   }
   function zoom(factor,anchorX=width/2,anchorY=height/2){
@@ -30,12 +31,16 @@ export function createMapCamera(){
   return {resize,zoom,pan,fit,snapshot};
 }
 
-export function attachMapViewport(host,world,controls){
+export function attachMapViewport(host,world,controls,{onViewChange=()=>{}}={}){
   const camera=createMapCamera(),pointers=new Map();
   let gesture=null,dragging=false,suppressClickUntil=0;
   function paint(){
     const view=camera.snapshot();
+    world.style.width=`${1000*view.layoutX}px`;world.style.height=`${660*view.layoutY}px`;
     world.style.transform=`translate(${view.offsetX}px,${view.offsetY}px) scale(${view.scale})`;
+    world.style.setProperty('--map-scale',String(view.scale));
+    world.classList.toggle('map-closeup',view.zoom>=1.4);
+    onViewChange(view);
     controls.querySelector('[data-map-zoom]').textContent=`${Math.round(view.zoom*100)}%`;
     host.classList.toggle('is-dragging',dragging);
   }
@@ -91,5 +96,5 @@ export function attachMapViewport(host,world,controls){
   const observer=new ResizeObserver(resize);observer.observe(host);
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
   resize();
-  return {resize,get interacting(){return pointers.size>0;}};
+  return {resize,snapshot:camera.snapshot,get interacting(){return pointers.size>0;}};
 }

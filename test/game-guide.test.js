@@ -93,6 +93,14 @@ test('Standard sits strictly between Explorer and Challenge in all four explicit
   assert.ok(weeklySupport(states[0])>=weeklySupport(states[1])&&weeklySupport(states[1])>=weeklySupport(states[2]));
 });
 
+test('recommended Explorer policy wins six seeds with funded care and reconciled accounts',context=>{
+  for(const seed of [1,7,42,73,917,2026]){
+    const {state,summary}=recommendedCampaign(seed,'explorer');
+    context.diagnostic(JSON.stringify({difficulty:'explorer',...summary}));
+    assert.equal(state.status,'won');assert.equal(summary.shortfalls,0);assert.ok(summary.minimumBalance>7000);
+  }
+});
+
 test('recommended Standard policy wins six deterministic seeds with funded care and fully reconciled accounts',context=>{
   for(const seed of [1,7,42,73,917,2026]){
     const {state,summary}=recommendedCampaign(seed,'standard');

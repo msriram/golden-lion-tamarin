@@ -1,5 +1,5 @@
-import {ONLINE_CONFIG} from './game-online-config.js?v=20261103-money-flow-2';
-import {normalizeNickname} from './game-players.js?v=20261103-money-flow-2';
+import {ONLINE_CONFIG} from './game-online-config.js?v=20261103-forest-redesign-1';
+import {normalizeNickname} from './game-players.js?v=20261103-forest-redesign-1';
 
 const modes=new Set(['tutorial','explorer','standard','challenge','expert']);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

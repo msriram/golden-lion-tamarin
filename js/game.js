@@ -1,9 +1,9 @@
-import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService,getTamarinPosition,speedIntervalMs} from './game-core.js?v=20261103-speed-controls-1';
-import {terrainArtwork} from './terrain.js?v=20261103-speed-controls-1';
-import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261103-speed-controls-1';
-import {createPlayerStore,rankScores} from './game-players.js?v=20261103-speed-controls-1';
-import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261103-speed-controls-1';
-import {attachMapViewport} from './map-viewport.js?v=20261103-speed-controls-1';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,activeLink,getMetrics,getTamarinPosition,speedIntervalMs,simulateOneWeek,startFundraiser,toggleService} from './game-core.js?v=20261103-forest-redesign-1';
+import {forestSceneArtwork,routeGeometry} from './forest-scene.js?v=20261103-forest-redesign-1';
+import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261103-forest-redesign-1';
+import {createPlayerStore,rankScores} from './game-players.js?v=20261103-forest-redesign-1';
+import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261103-forest-redesign-1';
+import {attachMapViewport} from './map-viewport.js?v=20261103-forest-redesign-1';
 
 let browserStorage;
 try{browserStorage=window.localStorage;}catch{}
@@ -12,7 +12,7 @@ const map=document.querySelector('[data-game-map]');
 let mapView;
 const dialog=document.querySelector('[data-report-dialog]');
 function prepareCampaign(saved){
-  const campaign=saved||createInitialState();
+  const campaign=saved||createInitialState(73,'explorer');
   campaign.difficulty=campaign.difficulty||(saved?'challenge':'standard');
   campaign.campaignId=campaign.campaignId||crypto.randomUUID();
   delete campaign.onlinePlayerId;
@@ -55,6 +55,8 @@ function renderResources(metrics){
   for(const [name,value] of Object.entries(values))document.querySelector(`[data-resource="${name}"]`).textContent=value;
   document.querySelector('[data-resource-balance]').textContent=state.lastWeek?`Last settled week: ${signed(state.lastWeek.netFC)} FC`:'Opening reserve · awards arrive later';
   document.querySelector('[data-weekly-summary]').textContent=`+${number(metrics.support)} support − ${number(metrics.cost)} bills`;
+  const sponsor=document.querySelector('[data-sponsor-support]');
+  sponsor.hidden=state.difficulty!=='explorer';sponsor.textContent='Includes 130 FC/week standing sponsor';
   document.querySelector('[data-calendar-season]').textContent=plantingSeason(state)?'Wet season · planting open':'Dry season · care for trees';
   document.querySelector('[data-resource-capacity]').textContent=`Habitat capacity: ${number(metrics.capacity)}`;
   document.querySelector('[data-resource-health]').textContent=`Habitat health: ${metrics.health}%`;
@@ -123,50 +125,88 @@ function renderInspector(){
   })();
   for(const [label,value] of fields){const item=document.createElement('div'),term=document.createElement('dt'),detail=document.createElement('dd');term.textContent=label;detail.textContent=value;item.append(term,detail);status.append(item);}
 }
+let highlightedRoute=null;
+let sceneLayout={x:1,y:1};
+function positionMapOverlays(view=mapView?.snapshot()){
+  if(!view)return;
+  if(sceneLayout.x!==view.layoutX||sceneLayout.y!==view.layoutY){
+    sceneLayout={x:view.layoutX,y:view.layoutY};
+  }
+  if(map.firstElementChild&&(Number(map.dataset.layoutX)!==sceneLayout.x||Number(map.dataset.layoutY)!==sceneLayout.y))renderMap();
+  const host=document.querySelector('.map-scroll'),labels=host.querySelector('[data-map-labels]');
+  for(const label of labels.children){
+    const patch=PATCHES.find(entry=>entry.id===label.dataset.groveLabel);
+    const screenX=view.offsetX+patch.x*10*sceneLayout.x*view.scale,screenY=view.offsetY+(patch.y*6.6*sceneLayout.y+75)*view.scale;
+    label.style.left=`${screenX}px`;label.style.top=`${screenY}px`;
+    label.hidden=screenX<0||screenX>view.width||screenY<0||screenY>view.height;
+  }
+  const caption=host.querySelector('[data-route-caption]'),route=state.links.find(entry=>entry.id===highlightedRoute);
+  caption.hidden=!route;
+  if(route){
+    const point=routeGeometry(route,sceneLayout).middle;
+    caption.style.left=`${Math.max(90,Math.min(view.width-90,view.offsetX+point.x*view.scale))}px`;
+    caption.style.top=`${Math.max(20,Math.min(view.height-55,view.offsetY+point.y*view.scale+20))}px`;
+    caption.querySelector('strong').textContent=route.name;
+    caption.querySelector('small').textContent=route.bridgeDue?`Building · ${route.bridgeRemainingWeeks??route.bridgeDue-state.totalWeeks} weeks`:route.agreementDue?`Negotiating · ${route.agreementDue-state.totalWeeks} weeks`:route.planted?`${Math.floor(route.age/52)} years · ${Math.round(corridorGrowth(route)*100)}% canopy`:route.built?`${Math.round(route.condition)}% bridge condition`:route.agreement?'Permission agreed · ready to build':'Land permission needed';
+  }
+}
+function highlightRoute(id){
+  highlightedRoute=id;
+  for(const route of map.querySelectorAll('[data-route]'))route.classList.toggle('highlighted',route.dataset.route===id);
+  positionMapOverlays();
+}
 function renderMap(){
   if(mapView?.interacting)return;
-  const focus=document.activeElement?.dataset.route;
-  const patchFocus=document.activeElement?.dataset.patch;
-  map.innerHTML=terrainArtwork();
-  const svg=map.querySelector('svg');
-  for(const link of state.links){
-    const from=PATCHES.find(patch=>patch.id===link.from),to=PATCHES.find(patch=>patch.id===link.to);
-    if(link.planted){
-      const growth=corridorGrowth(link),cover=document.createElementNS('http://www.w3.org/2000/svg','path');
-      const middleX=(from.x+to.x)*5,middleY=(from.y+to.y)*3.3;
-      cover.setAttribute('d',`M ${from.x*10} ${from.y*6.6} Q ${middleX} ${middleY-24} ${to.x*10} ${to.y*6.6}`);
-      cover.setAttribute('stroke',link.survival<60?'#94946c':'#58864a');cover.setAttribute('stroke-width',String(5+growth*68));cover.setAttribute('stroke-linecap','round');cover.setAttribute('fill','none');cover.setAttribute('opacity',String(.2+link.survival/200));cover.classList.add('corridor-canopy');svg.append(cover);
-      for(let index=1;index<=13;index+=1){
-        const position=index/14,tree=document.createElementNS('http://www.w3.org/2000/svg','circle');
-        tree.setAttribute('cx',String((from.x+(to.x-from.x)*position)*10));tree.setAttribute('cy',String((from.y+(to.y-from.y)*position)*6.6-8-Math.sin(position*Math.PI)*12));
-        tree.setAttribute('r',String((2+growth*9)*(index%3===0?.8:1)));tree.setAttribute('fill',link.survival<60?'#a39160':'#325b3b');tree.classList.add('corridor-tree');svg.append(tree);
-      }
+  const focus=document.activeElement?.dataset.route,patchFocus=document.activeElement?.dataset.patch;
+  map.innerHTML=forestSceneArtwork(state,sceneLayout);
+  map.dataset.layoutX=sceneLayout.x;map.dataset.layoutY=sceneLayout.y;
+  for(const bridge of map.querySelectorAll('.bridge-motion'))bridge.style.animationDelay=`-${performance.now()/1000%9.6}s`;
+  const labels=document.querySelector('[data-map-labels]');
+  if(!labels.children.length){
+    for(const patch of PATCHES){
+      const label=document.createElement('span');label.dataset.groveLabel=patch.id;label.textContent=patch.name;labels.append(label);
     }
-    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-    for(const [key,value] of Object.entries({x1:from.x*10,y1:from.y*6.6,x2:to.x*10,y2:to.y*6.6,stroke:activeLink(link)?'#a5732c':link.built?'#8f574a':'#8d8e6d','stroke-width':link.built?7:3,'stroke-dasharray':link.built?'0':'8 9'}))line.setAttribute(key,value);
-    svg.append(line);
-    const button=document.createElement('button');button.type='button';button.className=`route-marker ${activeLink(link)?'active':''} ${link.condition<45?'broken':''} ${selection?.type==='route'&&selection.id===link.id?'selected':''}`;
-    button.style.cssText=`left:${(from.x+to.x)/2}%;top:${(from.y+to.y)/2}%`;
-    button.dataset.route=link.id;button.setAttribute('aria-label',describeLink(link));
-    button.setAttribute('aria-pressed',String(selection?.type==='route'&&selection.id===link.id));
-    button.innerHTML=`<span>${link.name}</span><small>${link.bridgeDue?'Building':link.agreementDue?`Negotiating · ${link.agreementDue-state.totalWeeks}w`:link.planted?`${Math.floor(link.age/52)}y · ${Math.round(link.survival)}% trees`:link.built?`${Math.round(link.condition)}% bridge`:link.agreement?'Agreement signed':`${number(link.cost)} FC`}</small>`;
-    button.addEventListener('click',()=>actOnRoute(link.id));map.append(button);
   }
-  for(const patch of state.patches){
-    const recent=patch.lastAdversity&&state.totalWeeks-patch.lastAdversity.week<26;
-    const button=document.createElement('button');button.type='button';button.className=`terrain-area forest ${patch.health<40?'degraded':''} ${recent?`hit-${patch.lastAdversity.type}`:''}`;button.style.cssText=`left:${patch.x}%;top:${patch.y}%;width:${11+patch.health*.1}%;height:${16+patch.health*.14}%;opacity:${.55+patch.health/220}`;
-    button.setAttribute('aria-label',`${patch.name}: ${patch.population} tamarins, health ${Math.round(patch.health)}%.`);
-    button.dataset.patch=patch.id;button.classList.toggle('selected',selection?.type==='patch'&&selection.id===patch.id);
-    button.innerHTML=`<span class="area-name">${patch.name} · ${number(patch.population)}</span>`+Array.from({length:Math.max(1,Math.ceil(patch.health/10))},(_,index)=>`<i class="terrain-tree" style="left:${12+index*31%65}%;top:${8+index*23%62}%"></i>`).join('')+(recent?`<span class="hazard-badge">${ADVERSITIES[patch.lastAdversity.type]}</span>`:'');
-    button.addEventListener('click',()=>{selection={type:'patch',id:patch.id};message(`${patch.name} selected. ${tool==='inspect'?'Population and habitat details are shown below.':'Choose a named route to use '+toolNames[tool]+'.'}`);render();revealSelection();});map.append(button);
-  }
-  const token=document.querySelector('[data-tamarin]');
-  const position=getTamarinPosition(state);
+  const token=document.querySelector('[data-tamarin]'),position=getTamarinPosition(state);
   token.hidden=!position;
-  if(position){token.style.left=`${position.x}%`;token.style.top=`${position.y}%`;}
+  if(position){
+    token.style.left=`${position.x}%`;token.style.top=`${position.y}%`;
+    const route=state.links.find(entry=>entry.id===position.routeId);
+    const from=PATCHES.find(entry=>entry.id===route.from),to=PATCHES.find(entry=>entry.id===route.to);
+    const fraction=Math.abs(to.x-from.x)>.1?(position.x-from.x)/(to.x-from.x):(position.y-from.y)/(to.y-from.y);
+    token.style.marginTop=`${4*fraction*(1-fraction)*12}px`;
+    token.innerHTML='<svg viewBox="-32 -22 60 48" aria-hidden="true"><use href="#golden-tamarin"/></svg>';
+  }
+  highlightRoute(highlightedRoute);
   if(focus)map.querySelector(`[data-route="${focus}"]`)?.focus({preventScroll:true});
   else if(patchFocus)map.querySelector(`[data-patch="${patchFocus}"]`)?.focus({preventScroll:true});
 }
+map.addEventListener('pointerover',event=>{
+  if(event.pointerType==='touch')return;
+  const route=event.target.closest('[data-route]');if(route)highlightRoute(route.dataset.route);
+});
+map.addEventListener('pointerout',event=>{
+  if(event.pointerType==='touch')return;
+  const route=event.target.closest('[data-route]');
+  if(route&&!route.contains(event.relatedTarget))highlightRoute(null);
+});
+map.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible'))highlightRoute(event.target.closest('[data-route]')?.dataset.route||null);});
+map.addEventListener('focusout',event=>{if(!event.relatedTarget?.closest('[data-route]'))highlightRoute(null);});
+function activateMapTarget(event){
+  const route=event.target.closest('[data-route]'),patch=event.target.closest('[data-patch]');
+  if(route){highlightRoute(route.dataset.route);actOnRoute(route.dataset.route);}
+  else if(patch){
+    highlightRoute(null);selection={type:'patch',id:patch.dataset.patch};
+    const area=state.patches.find(entry=>entry.id===patch.dataset.patch);
+    message(`${area.name}: ${number(area.population)} tamarins · ${Math.round(area.health)}% habitat health. Select a route to negotiate, build, or plant.`);
+    render();revealSelection();
+  }else{highlightRoute(null);selection=null;renderInspector();}
+}
+map.addEventListener('click',activateMapTarget);
+document.addEventListener('click',event=>{if(!event.target.closest('[data-route]'))highlightRoute(null);});
+map.addEventListener('keydown',event=>{
+  if((event.key==='Enter'||event.key===' ')&&event.target.closest('[data-route],[data-patch]')){event.preventDefault();activateMapTarget(event);}
+});
 function renderFinance(metrics){
   const budget=weeklyBudget(state);
   const advice=getRecommendedStep(state);
@@ -181,7 +221,7 @@ function renderFinance(metrics){
   }
   document.querySelector('[data-budget-breakdown]').replaceChildren(breakdown);
   const support=budget.supportInputs;
-  document.querySelector('[data-support-formula]').textContent=`Recurring support = floor((max(0, trust − ${support.trustThreshold}) × ${support.trustPerPoint} + ${support.perMatureCorridor} per mature corridor when trust ≥ ${support.corridorTrust}) × ${budget.incomeMultiplier}). Current trust ${state.awareness.toFixed(2)}; mature corridors ${support.matureCorridors}. Result: ${number(budget.support)} FC/week. Bills are rounded once on the total; line items allocate that exact bill. Income is rounded down. ${budget.grant.explanation}`;
+  document.querySelector('[data-support-formula]').textContent=`Recurring support = floor((max(0, trust − ${support.trustThreshold}) × ${support.trustPerPoint} + ${support.perMatureCorridor} per mature corridor when trust ≥ ${support.corridorTrust} + ${support.sponsorBaseFC} standing sponsor base) × ${budget.incomeMultiplier}). Current trust ${state.awareness.toFixed(2)}; mature corridors ${support.matureCorridors}. Result: ${number(budget.support)} FC/week, including ${number(support.sponsorBaseFC*budget.incomeMultiplier)} sponsor FC. Bills are rounded once on the total; line items allocate that exact bill. Income is rounded down. ${budget.grant.explanation}`;
   const last=state.lastWeek;
   document.querySelector('[data-last-week]').textContent=last?`Week ${last.week}: opening ${number(last.openingBalanceFC)} + income ${number(last.incomeFC)} − spending ${number(last.expensesFC)} = closing ${number(last.closingBalanceFC)} FC (net ${signed(last.netFC)}). ${last.funded?'Operations fully paid.':`Operations shortfall: paid ${number(last.operationsPaidFC)} of ${number(last.operationsDueFC)} FC.`} Includes actions since the preceding settled week. ${last.categories.map(item=>`${item.category}: +${number(item.incomeFC)} / −${number(item.expensesFC)} FC`).join('; ')}.`:'No completed week yet. Any setup or route purchases already appear below.';
   tableRows(document.querySelector('[data-ledger]'),state.ledger.slice(-40).reverse().map(entry=>[ledgerDate(entry),entry.category,signed(entry.amount)]),3,'No transactions yet.');
@@ -302,7 +342,7 @@ document.querySelector('[data-tutorial-next]').addEventListener('click',()=>{
 map.addEventListener('click',event=>{if(!event.target.closest('[data-route], [data-patch]')){message(`Choose a named route to ${toolNames[tool].toLowerCase()}, or a forest grove to see its connected routes.`);revealSelection();}});
 dialog.addEventListener('close',()=>{if(state.status==='playing'&&dialog.returnValue==='continue'&&state.difficulty!=='tutorial'){state.paused=false;clock();render();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){state.paused=true;clock();save();render();}});
-mapView=attachMapViewport(document.querySelector('.map-scroll'),document.querySelector('.map-wrap'),document.querySelector('.map-controls'));
+mapView=attachMapViewport(document.querySelector('.map-scroll'),document.querySelector('.map-wrap'),document.querySelector('.map-controls'),{onViewChange:positionMapOverlays});
 function openPanel(panel){
   state.paused=true;clock();save();render();
   if(!panel.open)panel.showModal();

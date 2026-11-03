@@ -11,20 +11,20 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="refresh.css">
   <link rel="stylesheet" href="game.css">
-  <link rel="stylesheet" href="game-shell.css?v=20261103-money-flow">
+  <link rel="stylesheet" href="game-shell.css?v=20261103-forest-redesign-1">
 </head>
 <body class="game-page">
   <a class="skip-link" href="#game-map">Skip to the forest map</a>
   <main class="game-frame" id="game-app" aria-label="Tamarin Trails conservation game">
     <header class="game-titlebar">
       <a class="game-home" href="game-about.html" aria-label="Leave game and read the game guide">Tamarin Trails <small>Forest campaign</small></a>
-      <div class="difficulty-controls"><label for="game-difficulty">Mode</label><select id="game-difficulty" data-difficulty><option value="tutorial">Guided tutorial</option><option value="explorer">Explorer · easy</option><option value="standard" selected>Standard · balanced</option><option value="challenge">Challenge · hard</option><option value="expert">Expert · toughest</option></select><button class="game-button" type="button" data-new-game>New game</button></div>
+      <div class="difficulty-controls"><label for="game-difficulty">Mode</label><select id="game-difficulty" data-difficulty><option value="tutorial">Guided tutorial</option><option value="explorer" selected>Explorer · relaxed</option><option value="standard">Standard · balanced</option><option value="challenge">Challenge · hard</option><option value="expert">Expert · toughest</option></select><button class="game-button" type="button" data-new-game>New game</button></div>
       <nav class="game-window-controls" aria-label="Game window"><button class="game-button" type="button" data-player-open>Player: Guest</button><button class="game-button" type="button" data-leaderboard-open>Leaderboard</button><button class="game-button" type="button" data-fullscreen>Full screen</button><a href="game-about.html" target="_blank" rel="noopener">How to play ↗</a></nav>
     </header>
     <dl class="resource-bar" data-resource-bar aria-label="Live conservation resources">
       <div class="resource-item"><dt>Forest Credits</dt><dd data-resource="funds">12,000 FC</dd><small data-resource-balance></small></div>
       <div class="resource-item"><dt>Calendar</dt><dd data-resource="calendar">Y1 · W1</dd><small data-calendar-season></small></div>
-      <div class="resource-item budget-resource"><dt>Weekly budget <button type="button" data-budget-open aria-label="Open itemized budget and transaction ledger">Details</button></dt><dd data-resource="weekly">—</dd><small data-weekly-summary></small></div>
+      <div class="resource-item budget-resource"><dt>Weekly budget <button type="button" data-budget-open aria-label="Open itemized budget and transaction ledger">Details</button></dt><dd data-resource="weekly">—</dd><small data-weekly-summary></small><small data-sponsor-support hidden></small></div>
       <div class="resource-item" data-resource-kind="trust"><dt>Community trust</dt><dd data-resource="trust">38 / 100</dd><small data-resource-trust>Grant needs 45</small></div>
       <div class="resource-item" data-resource-kind="evidence"><dt>Monitoring evidence</dt><dd data-resource="evidence">0 / 100</dd><small data-resource-evidence>Grant needs 20</small></div>
       <div class="resource-item"><dt>Tamarin population</dt><dd data-resource="tamarins">5,000</dd><small data-resource-capacity></small></div>
@@ -60,7 +60,7 @@
           <button class="tool-button" type="button" data-tool="repair" aria-pressed="false">Repair &amp; replant<small>500 FC</small></button>
         </div>
         <div class="map-stage">
-          <div class="map-scroll" tabindex="0" role="region" aria-label="Forest map. Drag to pan, scroll or pinch to zoom. Arrow keys pan; plus and minus zoom; Home fits the whole forest."><div class="map-wrap"><div class="game-map" id="game-map" data-game-map aria-label="Forest landscape: choose a grove or named route"></div><div class="tamarin-token" data-tamarin aria-hidden="true" hidden></div></div></div>
+          <div class="map-scroll" tabindex="0" role="region" aria-label="Forest map. Drag to pan, scroll or pinch to zoom. Arrow keys pan; plus and minus zoom; Home fits the whole forest."><div class="map-wrap"><div class="game-map" id="game-map" data-game-map aria-label="Forest landscape: choose a grove or named route"></div><div class="tamarin-token" data-tamarin aria-hidden="true" hidden></div></div><div class="map-labels" data-map-labels aria-hidden="true"></div><div class="route-caption" data-route-caption hidden><strong></strong><small></small></div></div>
           <nav class="map-controls" aria-label="Map view"><button type="button" data-map-zoom-out aria-label="Zoom out">−</button><output data-map-zoom aria-label="Map zoom">100%</output><button type="button" data-map-zoom-in aria-label="Zoom in">+</button><button type="button" data-map-fit>Fit</button></nav>
           <section class="selection-panel" data-selection-panel aria-label="Selected area" hidden>
             <div class="selection-heading"><h2 data-inspector-title></h2><span data-selected-tool></span><button type="button" data-inspector-close aria-label="Close area details">×</button></div>
@@ -110,6 +110,6 @@
     </div>
   </dialog>
   <dialog class="game-dialog leaderboard-dialog" data-leaderboard-dialog aria-labelledby="leaderboard-title"><div class="dialog-content"><div class="dialog-heading"><h2 id="leaderboard-title">Forest recoveries</h2><button class="game-button" type="button" data-close-dialog>Close</button></div><p>Completed campaigns, separated by difficulty and leaderboard. Wins rank by fewest simulated weeks, then highest remaining credits. Tutorial runs are practice, not ranked. Browser scores are not verified.</p><label for="leaderboard-scope">Leaderboard</label><select id="leaderboard-scope" data-leaderboard-scope><option value="device">This device</option><option value="online" data-online-scope-option disabled>Online · unverified</option></select><label for="leaderboard-mode">Difficulty</label><select id="leaderboard-mode" data-leaderboard-mode><option value="standard">Standard</option><option value="explorer">Explorer</option><option value="challenge">Challenge</option><option value="expert">Expert</option><option value="tutorial">Tutorial · practice</option></select><div class="accounts-scroll"><table class="campaign-table"><thead><tr><th>Rank</th><th>Player</th><th>Outcome</th><th>Weeks</th><th>Tamarins</th><th>FC left</th></tr></thead><tbody data-leaderboard-rows></tbody></table></div><p data-leaderboard-empty></p></div></dialog>
-  <script type="module" src="js/game.js?v=20261103-speed-controls-1"></script>
+  <script type="module" src="js/game.js?v=20261103-forest-redesign-1"></script>
 </body>
 </html>

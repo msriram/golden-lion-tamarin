@@ -270,7 +270,7 @@ test('pure budget explains aggregate rounding and both support formula inputs at
     assert.ok(budget.items.every(item=>Number.isInteger(item.amount)));
     assert.ok(Math.abs(budget.income.reduce((sum,item)=>sum+item.scaledFC,0)+budget.incomeRoundingFC-budget.support)<1e-9);
     assert.equal(budget.cost,Math.round(budget.items.reduce((sum,item)=>sum+item.base,0)*budget.operationsMultiplier));
-    assert.equal(budget.support,Math.floor((Math.max(0,trust-35)*2.8+(trust>=65?105:0))*budget.incomeMultiplier));
+    assert.equal(budget.support,Math.floor((Math.max(0,trust-35)*2.8+(trust>=65?105:0)+budget.supportInputs.sponsorBaseFC)*budget.incomeMultiplier));
     assert.equal(budget.supportInputs.matureCorridors,3);
     assert.equal(budget.net,budget.support-budget.cost);assert.equal(budget.burn,-budget.net);
   }
