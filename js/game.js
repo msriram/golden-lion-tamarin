@@ -1,10 +1,9 @@
-import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService} from './game-core.js';
-import {terrainArtwork} from './terrain.js';
-import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js';
-import {createPlayerStore,rankScores} from './game-players.js';
-import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js';
-import {attachMapViewport} from './map-viewport.js';
-import {getTamarinPosition} from './game-core.js';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService,getTamarinPosition} from './game-core.js?v=20261103-money-flow-2';
+import {terrainArtwork} from './terrain.js?v=20261103-money-flow-2';
+import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261103-money-flow-2';
+import {createPlayerStore,rankScores} from './game-players.js?v=20261103-money-flow-2';
+import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261103-money-flow-2';
+import {attachMapViewport} from './map-viewport.js?v=20261103-money-flow-2';
 
 let browserStorage;
 try{browserStorage=window.localStorage;}catch{}

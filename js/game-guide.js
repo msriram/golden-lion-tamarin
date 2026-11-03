@@ -1,4 +1,4 @@
-import {PROGRAMS,FUNDRAISERS,applyTool,toggleService,startFundraiser,simulateOneWeek,getMetrics,plantingSeason,weeklyBudget,getPopulationExplanation} from './game-core.js';
+import {PROGRAMS,FUNDRAISERS,applyTool,toggleService,startFundraiser,simulateOneWeek,getMetrics,plantingSeason,weeklyBudget,getPopulationExplanation} from './game-core.js?v=20261103-money-flow-2';
 
 const routes=['ab','ad','be','ef','bc'];
 export function getRecommendedStep(state){
