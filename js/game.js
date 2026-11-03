@@ -1,9 +1,9 @@
-import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService,getTamarinPosition} from './game-core.js?v=20261103-money-flow-2';
-import {terrainArtwork} from './terrain.js?v=20261103-money-flow-2';
-import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261103-money-flow-2';
-import {createPlayerStore,rankScores} from './game-players.js?v=20261103-money-flow-2';
-import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261103-money-flow-2';
-import {attachMapViewport} from './map-viewport.js?v=20261103-money-flow-2';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,describeLink,activeLink,getMetrics,simulateOneWeek,startFundraiser,toggleService,getTamarinPosition,speedIntervalMs} from './game-core.js?v=20261103-speed-controls-1';
+import {terrainArtwork} from './terrain.js?v=20261103-speed-controls-1';
+import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261103-speed-controls-1';
+import {createPlayerStore,rankScores} from './game-players.js?v=20261103-speed-controls-1';
+import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261103-speed-controls-1';
+import {attachMapViewport} from './map-viewport.js?v=20261103-speed-controls-1';
 
 let browserStorage;
 try{browserStorage=window.localStorage;}catch{}
@@ -237,7 +237,8 @@ function render(){
   document.querySelector('[data-pause]').textContent=state.difficulty==='tutorial'?'Guided time':state.paused?'Start':'Pause';document.querySelector('[data-pause]').disabled=state.status!=='playing'||state.difficulty==='tutorial';
   document.querySelectorAll('[data-speed]').forEach(button=>{button.setAttribute('aria-pressed',String(Number(button.dataset.speed)===state.speed));button.disabled=state.difficulty==='tutorial';});
   document.querySelector('[data-step]').disabled=state.status!=='playing'||state.difficulty==='tutorial';
-  document.querySelector('[data-time-summary]').textContent=state.difficulty==='tutorial'?'Guided time waits for your next decision.':`${state.speed} simulated ${state.speed===1?'week':'weeks'}/second · ${state.paused?'paused':'running'}`;
+  const seconds=speedIntervalMs(state.speed)/1000;
+  document.querySelector('[data-time-summary]').textContent=state.difficulty==='tutorial'?'Guided time waits for your next decision.':`${state.speed}× · 1 week every ${seconds} ${seconds===1?'second':'seconds'} · ${state.paused?'paused':'running'}`;
   const rate=getDifficulty(state).operations,weekly=value=>`${rate===1?'':'≈'}${Math.round(value*rate)}`;
   const toolCosts={agreement:`600 FC · 12 weeks · +${weekly(9)}/week`,bridge:`1,800–3,400 FC · +${weekly(15)}/week`,restore:`1,200 FC · 4 years · +${weekly(16)}/week`};
   document.querySelectorAll('[data-tool]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.tool===tool));button.disabled=state.status!=='playing';if(toolCosts[button.dataset.tool])button.querySelector('small').textContent=toolCosts[button.dataset.tool];});
@@ -270,7 +271,7 @@ function weekFeedback(){
 }
 function clock(){
   clearInterval(timer);if(state.paused||state.status!=='playing')return;
-  timer=setInterval(()=>{state=simulateOneWeek(state);weekFeedback();if(state.totalWeeks%52===0&&state.status==='playing'){state.paused=true;clearInterval(timer);render();report(true);}else{render();if(state.status!=='playing')clearInterval(timer);}if(state.totalWeeks%4===0||state.paused)save();},1000/state.speed);
+  timer=setInterval(()=>{state=simulateOneWeek(state);weekFeedback();if(state.totalWeeks%52===0&&state.status==='playing'){state.paused=true;clearInterval(timer);render();report(true);}else{render();if(state.status!=='playing')clearInterval(timer);}if(state.totalWeeks%4===0||state.paused)save();},speedIntervalMs(state.speed));
 }
 for(const button of document.querySelectorAll('[data-tool]'))button.addEventListener('click',()=>{tool=button.dataset.tool;message(`${button.querySelector('small')?.textContent||tool}. Select a named route on the map.`);render();});
 for(const button of document.querySelectorAll('[data-service]'))button.addEventListener('click',()=>handle(toggleService(state,button.dataset.service)));

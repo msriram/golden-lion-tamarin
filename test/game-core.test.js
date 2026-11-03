@@ -1,9 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createInitialState,simulateOneWeek,applyTool,applyAdversity,startFundraiser,toggleService,getMetrics,weeklyCost,weeklySupport,weeklyBudget,weeklyBudgetBreakdown,getPopulationExplanation,DIFFICULTIES,FUNDRAISERS,fundingAward,reachable,TREE_MATURITY_WEEKS} from '../js/game-core.js';
+import {createInitialState,simulateOneWeek,applyTool,applyAdversity,startFundraiser,toggleService,getMetrics,weeklyCost,weeklySupport,weeklyBudget,weeklyBudgetBreakdown,getPopulationExplanation,DIFFICULTIES,FUNDRAISERS,fundingAward,reachable,TREE_MATURITY_WEEKS,SPEED_INTERVALS_MS,speedIntervalMs,setSpeed} from '../js/game-core.js';
 import {runCampaign} from '../scripts/playtest.mjs';
 
 function advance(state,weeks){state={...state,paused:false};for(let week=0;week<weeks;week+=1)state=simulateOneWeek(state);return state;}
+test('speed controls use the requested real-time interval for every multiplier',()=>{
+  assert.deepEqual(SPEED_INTERVALS_MS,{1:8000,2:4000,4:2000,8:1000,16:500,32:250});
+  for(const [speed,interval] of Object.entries(SPEED_INTERVALS_MS)){
+    assert.equal(speedIntervalMs(Number(speed)),interval);
+    assert.equal(setSpeed(createInitialState(),Number(speed)).speed,Number(speed));
+  }
+  assert.equal(setSpeed(createInitialState(),64).speed,1);
+});
 test('idle management exhausts cash and eventually ends the program',()=>{
   const state=advance(createInitialState(),1000);
   assert.equal(state.balanceFC,0);assert.equal(state.status,'lost-population');

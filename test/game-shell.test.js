@@ -24,6 +24,8 @@ test('game is a standalone application without website article framing',async()=
   assert.match(html,/name="outreachConsent" type="checkbox" required/);
   assert.doesNotMatch(html,/data-request-code|data-online-form|data-verify-code/);
   assert.match(html,/Unverified|unverified/);
+  for(const speed of [1,2,4,8,16,32])assert.match(html,new RegExp(`data-speed="${speed}"`));
+  assert.match(html,/1× · 1 week every 8 seconds/);
 });
 test('game introduction launches a separate tab and publishes explicit difficulty modifiers',async()=>{
   const html=await readFile(new URL('../game-about.html',import.meta.url),'utf8');

@@ -1,6 +1,7 @@
 export const TREE_MATURITY_WEEKS = 208;
 export const GRANT_REQUIREMENTS = {evidence:20,trust:45};
 export const SUPPORT_RATES = {trustThreshold:35,trustPerPoint:2.8,corridorTrust:65,perMatureCorridor:35};
+export const SPEED_INTERVALS_MS = Object.freeze({1:8000,2:4000,4:2000,8:1000,16:500,32:250});
 export const DIFFICULTIES = {
   tutorial:{label:'Guided tutorial',operations:.55,income:1.4,threat:.4,growth:1.4,description:'Step-by-step guidance: 45% lower weekly bills, 40% higher recurring support and awards, 40% faster births, and 60% weaker threat damage.'},
   explorer:{label:'Explorer',operations:.75,income:1.15,threat:.7,growth:1.15,description:'25% lower weekly bills, 15% higher recurring support and awards, 15% faster births, and 30% weaker threat damage. Make your own conservation decisions.'},
@@ -399,4 +400,5 @@ export function simulateOneWeek(oldState) {
   return state;
 }
 export function setPaused(state,paused){return {...state,paused};}
-export function setSpeed(state,speed){return {...state,speed:[1,2,4,8].includes(speed)?speed:1};}
+export function speedIntervalMs(speed){return SPEED_INTERVALS_MS[speed]||SPEED_INTERVALS_MS[1];}
+export function setSpeed(state,speed){return {...state,speed:SPEED_INTERVALS_MS[speed]?speed:1};}
