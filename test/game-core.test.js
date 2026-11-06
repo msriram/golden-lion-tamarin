@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createInitialState,simulateOneWeek,applyTool,applyAdversity,startFundraiser,toggleService,getMetrics,weeklyCost,weeklySupport,weeklyBudget,weeklyBudgetBreakdown,getPopulationExplanation,DIFFICULTIES,FUNDRAISERS,fundingAward,reachable,TREE_MATURITY_WEEKS,SPEED_INTERVALS_MS,speedIntervalMs,setSpeed} from '../js/game-core.js';
+import {createInitialState,simulateOneWeek,applyTool,applyAdversity,startFundraiser,toggleService,getMetrics,getTamarinPositions,weeklyCost,weeklySupport,weeklyBudget,weeklyBudgetBreakdown,getPopulationExplanation,DIFFICULTIES,FUNDRAISERS,fundingAward,reachable,TREE_MATURITY_WEEKS,SPEED_INTERVALS_MS,speedIntervalMs,setSpeed} from '../js/game-core.js';
 import {runCampaign} from '../scripts/playtest.mjs';
 
 function advance(state,weeks){state={...state,paused:false};for(let week=0;week<weeks;week+=1)state=simulateOneWeek(state);return state;}
@@ -28,6 +28,25 @@ test('outreach and monitoring add recurring costs and earn trust and evidence on
 test('insufficient funds and missing permission reject commands without mutating resources',()=>{
   const state=createInitialState();assert.equal(applyTool(state,'bridge','ab').ok,false);
   state.balanceFC=100;assert.equal(applyTool(state,'agreement','ab').ok,false);assert.equal(state.ledger.length,0);
+});
+test('repair and reseeding has a four-week route cooldown',()=>{
+  const initial=createInitialState(),link=initial.links[0];
+  link.agreement=true;link.built=true;link.planted=true;link.condition=62;link.survival=55;
+  const repaired=applyTool(initial,'repair','ab');assert.equal(repaired.ok,true);
+  assert.equal(repaired.state.links[0].repairReadyWeek,4);assert.equal(repaired.state.links[0].condition,100);
+  const balance=repaired.state.balanceFC,blocked=applyTool(repaired.state,'repair','ab');
+  assert.equal(blocked.ok,false);assert.equal(blocked.state.balanceFC,balance);assert.match(blocked.message,/once every four weeks/);
+  repaired.state.totalWeeks=3;assert.equal(applyTool(repaired.state,'repair','ab').ok,false);
+  repaired.state.totalWeeks=4;repaired.state.links[0].condition=80;
+  assert.equal(applyTool(repaired.state,'repair','ab').ok,true);
+});
+test('every open corridor carries its own moving tamarin group',()=>{
+  const state=createInitialState();
+  Object.assign(state.links[0],{agreement:true,built:true,bridgeOpenedWeek:0});
+  Object.assign(state.links[1],{agreement:true,built:true,bridgeOpenedWeek:4,planted:true,age:52});
+  const positions=getTamarinPositions(state);
+  assert.equal(positions.length,5);assert.deepEqual(new Set(positions.map(position=>position.routeId)),new Set(['ab','bc']));
+  assert.equal(new Set(positions.map(position=>position.id)).size,positions.length);
 });
 test('bridge construction, delayed planting, and route-specific unlocks',()=>{
   let state=applyTool(createInitialState(),'agreement','ab').state;

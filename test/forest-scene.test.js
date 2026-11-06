@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {forestSceneArtwork,routeGeometry,FOREST_SPECIES} from '../js/forest-scene.js';
+import {forestSceneArtwork,routeGeometry,roadCenterXAt,FOREST_SPECIES} from '../js/forest-scene.js';
 import {createInitialState} from '../js/game-core.js';
 
 test('forest map uses deterministic irregular woodland and interactive track paths without label boxes',()=>{
@@ -47,6 +47,13 @@ test('restored woodland changes from seedlings to wider mixed native-tree cover 
   assert.notEqual(young,mature);assert.doesNotMatch(mature,/href="#tree-sapling"/);
   route.survival=40;assert.match(forestSceneArtwork(state),/data-growth="0.400"/);
 });
+test('restoration trees stay beside the road and the landscape has restrained ambient motion',()=>{
+  const state=createInitialState(),route=state.links[0];route.planted=true;
+  const scene=forestSceneArtwork(state),trees=[...scene.matchAll(/data-plant-x="([^"]+)" data-plant-y="([^"]+)"/g)];
+  assert.equal(trees.length,62);
+  for(const [,positionX,positionY] of trees)assert.ok(Math.abs(Number(positionX)-roadCenterXAt(Number(positionY)))>=23.9);
+  for(const feature of ['distant-hills','water-shimmer','bird-flock','road-vehicle','tree-sway'])assert.match(scene,new RegExp(feature));
+});
 test('map labels stay outside the scaled world; detail layers, hit areas and motion settings are explicit',async()=>{
   const styles=await readFile(new URL('../game-shell.css',import.meta.url),'utf8');
   const html=await readFile(new URL('../game.html',import.meta.url),'utf8');
@@ -54,6 +61,6 @@ test('map labels stay outside the scaled world; detail layers, hit areas and mot
   assert.match(styles,/\.map-labels span[^}]*font:600 11px/);
   assert.match(styles,/\.forest-scene \{ overflow:visible/);
   assert.match(styles,/\.map-closeup \.forest-scene \.tree-detail/);
-  assert.match(styles,/stroke-width:32; vector-effect:non-scaling-stroke/);
+  assert.match(styles,/\.route-touch-target[^}]*stroke-width:32[^}]*vector-effect:non-scaling-stroke/);
   assert.match(styles,/@media\(prefers-reduced-motion:reduce\)/);
 });

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="refresh.css">
   <link rel="stylesheet" href="game.css">
-  <link rel="stylesheet" href="game-shell.css?v=20261103-forest-redesign-1">
+  <link rel="stylesheet" href="game-shell.css?v=20261106-immersive-1">
 </head>
 <body class="game-page">
   <a class="skip-link" href="#game-map">Skip to the forest map</a>
@@ -31,59 +31,67 @@
       <div class="resource-item"><dt>Forest cover</dt><dd data-resource="forest">32%</dd><small data-resource-health></small></div>
       <div class="resource-item"><dt>Cash runway</dt><dd data-resource="runway">—</dd><small>Recurring bills only; excludes awards</small></div>
     </dl>
-    <section class="cashflow-bar" data-cashflow-bar aria-label="Campaign money flow" aria-live="polite">
-      <div class="cashflow-heading"><span>Money flow</span><strong data-cashflow-net>—</strong><button type="button" data-cashflow-details>Full ledger</button></div>
-      <div class="cashflow-lane income"><span>↑ Weekly money in</span><strong data-cashflow-in>+0 FC</strong><small data-cashflow-in-detail>No recurring income yet.</small></div>
-      <div class="cashflow-lane expense"><span>↓ Weekly money out</span><strong data-cashflow-out>−0 FC</strong><small data-cashflow-out-detail>No recurring expenses yet.</small></div>
-      <div class="cashflow-lane latest"><span>Latest one-time movement</span><strong data-cashflow-latest-amount>—</strong><small data-cashflow-latest-detail>No transactions yet.</small></div>
-    </section>
     <div class="game-layout">
-      <aside class="game-stats" aria-label="Threats and funding">
-        <section class="side-panel threat-panel"><h2>Threat watch</h2><p data-threat></p><p class="risk-message" data-risk role="status"></p></section>
-        <section class="side-panel"><h2>Funding desk</h2><p class="fact-note" data-campaign></p><div class="fundraiser-grid">
-          <button class="fundraiser-button" type="button" data-fundraiser="presentation">School outreach<small></small></button>
-          <button class="fundraiser-button" type="button" data-fundraiser="artShow">Community art show<small></small></button>
-          <button class="fundraiser-button" type="button" data-fundraiser="scienceFair">Science festival<small></small></button>
-          <button class="fundraiser-button" type="button" data-fundraiser="grant">Evidence grant<small></small><span class="grant-requirements" data-grant-requirements><span data-grant-evidence></span><span data-grant-trust></span><span data-grant-fee></span></span><span class="grant-availability" data-grant-availability></span></button>
-          <button class="fundraiser-button" type="button" data-fundraiser="appeal">Emergency appeal<small></small></button>
-        </div></section>
-        <section class="side-panel"><h2>Planting season</h2><p class="fact-note" data-season></p></section>
-        <details class="side-panel"><summary>Wildlife indices</summary><div class="wildlife-list" data-wildlife></div></details>
-        <section class="side-panel"><h2>Event log</h2><ol class="event-log" data-event-log></ol></section>
-      </aside>
       <div class="game-main">
-        <div class="toolbelt" aria-label="Route tools">
-          <button class="tool-button" type="button" data-tool="inspect" aria-pressed="true">Inspect<small>Costs, condition, survival</small></button>
-          <button class="tool-button" type="button" data-tool="agreement" aria-pressed="false">Negotiate<small>600 FC · 12 weeks</small></button>
-          <button class="tool-button" type="button" data-tool="bridge" aria-pressed="false">Build bridge<small>1,800–3,400 FC</small></button>
-          <button class="tool-button" type="button" data-tool="restore" aria-pressed="false">Plant cover<small>1,200 FC · 4 years</small></button>
-          <button class="tool-button" type="button" data-tool="repair" aria-pressed="false">Repair &amp; replant<small>500 FC</small></button>
-        </div>
         <div class="map-stage">
-          <div class="map-scroll" tabindex="0" role="region" aria-label="Forest map. Drag to pan, scroll or pinch to zoom. Arrow keys pan; plus and minus zoom; Home fits the whole forest."><div class="map-wrap"><div class="game-map" id="game-map" data-game-map aria-label="Forest landscape: choose a grove or named route"></div><div class="tamarin-token" data-tamarin aria-hidden="true" hidden></div></div><div class="map-labels" data-map-labels aria-hidden="true"></div><div class="route-caption" data-route-caption hidden><strong></strong><small></small></div></div>
+          <div class="map-scroll" tabindex="0" role="region" aria-label="Forest map. Drag to pan, scroll or pinch to zoom. Select a pathway for conservation actions."><div class="map-wrap"><div class="game-map" id="game-map" data-game-map aria-label="Forest landscape: choose a grove or named route"></div><div class="tamarin-layer" data-tamarin-layer aria-hidden="true"></div></div><div class="map-labels" data-map-labels aria-hidden="true"></div><div class="route-caption" data-route-caption hidden><strong></strong><small></small></div>
+            <section class="selection-panel route-action-card" data-selection-panel aria-label="Selected area actions" hidden>
+              <div class="selection-heading"><h2 data-inspector-title></h2><span data-selected-tool></span><button type="button" data-inspector-close aria-label="Close area details">×</button></div>
+              <dl class="selection-status" data-inspector-status></dl><p class="inspector-copy" data-inspector></p>
+              <div class="route-action-grid" data-route-action-grid>
+                <button class="route-action" type="button" data-route-action="inspect"><span aria-hidden="true">⌕</span><strong>Inspect</strong><small>Costs and condition</small></button>
+                <button class="route-action" type="button" data-route-action="agreement"><span aria-hidden="true">⌂</span><strong>Negotiate</strong><small>Land permission</small></button>
+                <button class="route-action" type="button" data-route-action="bridge"><span aria-hidden="true">⌁</span><strong>Build bridge</strong><small>Connect groves</small></button>
+                <button class="route-action" type="button" data-route-action="restore"><span aria-hidden="true">♧</span><strong>Plant cover</strong><small>Grow habitat</small></button>
+                <button class="route-action" type="button" data-route-action="repair"><span aria-hidden="true">↻</span><strong>Repair &amp; reseed</strong><small data-repair-action-copy>4-week cooldown</small></button>
+              </div>
+            </section>
+          </div>
           <nav class="map-controls" aria-label="Map view"><button type="button" data-map-zoom-out aria-label="Zoom out">−</button><output data-map-zoom aria-label="Map zoom">100%</output><button type="button" data-map-zoom-in aria-label="Zoom in">+</button><button type="button" data-map-fit>Fit</button></nav>
-          <section class="selection-panel" data-selection-panel aria-label="Selected area" hidden>
-            <div class="selection-heading"><h2 data-inspector-title></h2><span data-selected-tool></span><button type="button" data-inspector-close aria-label="Close area details">×</button></div>
-            <dl class="selection-status" data-inspector-status></dl><p class="inspector-copy" data-inspector></p>
-          </section>
+          <nav class="map-command-rail funding-rail" data-command-rail="funding" aria-label="Funding actions">
+            <button class="rail-toggle" type="button" data-rail-toggle="funding" aria-expanded="false"><span aria-hidden="true">$</span><strong>Funding</strong></button>
+            <div class="rail-actions"><p class="rail-status" data-campaign></p>
+              <button class="fundraiser-button command-button" type="button" data-fundraiser="presentation"><span class="command-icon" aria-hidden="true">🏫</span><span class="command-copy"><strong>School outreach</strong><small data-command-status></small></span></button>
+              <button class="fundraiser-button command-button" type="button" data-fundraiser="artShow"><span class="command-icon" aria-hidden="true">🎨</span><span class="command-copy"><strong>Community art show</strong><small data-command-status></small></span></button>
+              <button class="fundraiser-button command-button" type="button" data-fundraiser="scienceFair"><span class="command-icon" aria-hidden="true">🔬</span><span class="command-copy"><strong>Science festival</strong><small data-command-status></small></span></button>
+              <button class="fundraiser-button command-button" type="button" data-fundraiser="grant"><span class="command-icon" aria-hidden="true">📄</span><span class="command-copy"><strong>Evidence grant</strong><small data-command-status></small><span class="grant-requirements" data-grant-requirements><span data-grant-evidence></span><span data-grant-trust></span><span data-grant-fee></span></span><span class="grant-availability" data-grant-availability></span></span></button>
+              <button class="fundraiser-button command-button" type="button" data-fundraiser="appeal"><span class="command-icon" aria-hidden="true">SOS</span><span class="command-copy"><strong>Emergency appeal</strong><small data-command-status></small></span></button>
+            </div>
+          </nav>
+          <nav class="map-command-rail program-rail" data-command-rail="programs" aria-label="Community and field programs">
+            <button class="rail-toggle" type="button" data-rail-toggle="programs" aria-expanded="false"><span aria-hidden="true">◎</span><strong>Programs</strong></button>
+            <div class="rail-actions"><p class="rail-status">Setup is paid now; weekly care continues during each program.</p>
+              <button class="program-button command-button" type="button" data-service="outreach" aria-pressed="false"><span class="command-icon" aria-hidden="true">🤝</span><span class="command-copy"><strong>Community outreach</strong><small data-command-status></small><small data-command-benefit></small><small data-command-limit></small></span></button>
+              <button class="program-button command-button" type="button" data-service="monitoring" aria-pressed="false"><span class="command-icon" aria-hidden="true">🔭</span><span class="command-copy"><strong>Field monitoring</strong><small data-command-status></small><small data-command-benefit></small><small data-command-limit></small></span></button>
+              <button class="program-button command-button" type="button" data-service="nursery" aria-pressed="false"><span class="command-icon" aria-hidden="true">🌱</span><span class="command-copy"><strong>Nursery care</strong><small data-command-status></small><small data-command-benefit></small><small data-command-limit></small></span></button>
+              <button class="program-button command-button" type="button" data-service="health" aria-pressed="false"><span class="command-icon" aria-hidden="true">✚</span><span class="command-copy"><strong>Wildlife veterinary team</strong><small data-command-status></small><small data-command-benefit></small><small data-command-limit></small></span></button>
+              <button class="program-button command-button" type="button" data-service="fireWatch" aria-pressed="false"><span class="command-icon" aria-hidden="true">🔥</span><span class="command-copy"><strong>Fire preparedness</strong><small data-command-status></small><small data-command-benefit></small><small data-command-limit></small></span></button>
+            </div>
+          </nav>
+          <div class="status-drawer" data-status-drawer hidden>
+            <button class="status-drawer-close" type="button" data-status-close aria-label="Close status panel">×</button>
+            <section data-status-panel="threat" hidden><h2>Threat watch</h2><p data-threat></p><p class="risk-message" data-risk role="status"></p></section>
+            <section data-status-panel="season" hidden><h2>Planting season</h2><p class="fact-note" data-season></p></section>
+            <section data-status-panel="wildlife" hidden><h2>Wildlife indices</h2><div class="wildlife-list" data-wildlife></div></section>
+            <section data-status-panel="goals" hidden><h2>Bring the population back</h2><label for="population-progress">Recovery toward 10,000 tamarins</label><progress id="population-progress" data-population-progress max="10000" value="5000">5,000 of 10,000</progress><div class="population-scale"><span>Below 1,000: game over</span><span>10,000: recovered</span></div><p data-population-change></p><p data-population-reason></p><ul class="objectives"><li data-objective="population"></li><li data-objective="network"></li><li data-objective="forest"></li><li data-objective="health"></li><li data-objective="community"></li><li data-objective="stability"></li></ul></section>
+            <section data-status-panel="events" hidden><h2>Event log</h2><ol class="event-log" data-event-log></ol></section>
+            <section data-status-panel="advice" hidden><h2>Planning advice</h2><p data-advisor></p><p>This is a suggestion, not an automatic action. You decide when to act.</p></section>
+            <section data-status-panel="map" hidden><h2>Map guide</h2><div class="map-legend" aria-label="Map legend"><span class="legend-item"><span class="legend-swatch forest"></span>Forest</span><span class="legend-item"><span class="legend-swatch pasture"></span>Pasture</span><span class="legend-item"><span class="legend-swatch road"></span>Road</span><span class="legend-item"><span class="legend-swatch growing"></span>Restoration</span><span>⌂ Land permission needed</span><span>Drag to pan · scroll or pinch to zoom</span></div></section>
+          </div>
+          <nav class="status-dock" aria-label="Forest status panels">
+            <button type="button" data-status-toggle="threat" aria-expanded="false"><span aria-hidden="true">⚠</span>Threat</button>
+            <button type="button" data-status-toggle="season" aria-expanded="false"><span aria-hidden="true">♧</span>Season</button>
+            <button type="button" data-status-toggle="wildlife" aria-expanded="false"><span aria-hidden="true">◇</span>Wildlife</button>
+            <button type="button" data-status-toggle="goals" aria-expanded="false"><span aria-hidden="true">✓</span>Goals</button>
+            <button type="button" data-status-toggle="events" aria-expanded="false"><span aria-hidden="true">≡</span>Log</button>
+            <button type="button" data-status-toggle="advice" aria-expanded="false"><span aria-hidden="true">?</span>Advice</button>
+            <button type="button" data-status-toggle="map" aria-expanded="false"><span aria-hidden="true">⌖</span>Map</button>
+          </nav>
         </div>
-        <div class="map-legend" aria-label="Map legend"><span class="legend-item"><span class="legend-swatch forest"></span>Forest</span><span class="legend-item"><span class="legend-swatch pasture"></span>Pasture</span><span class="legend-item"><span class="legend-swatch road"></span>Road</span><span class="legend-item"><span class="legend-swatch growing"></span>Restoration</span><span>⌂ Land permission needed</span><span>Drag to pan · scroll or pinch to zoom</span></div>
         <div class="game-message" data-game-message role="status" aria-live="polite">Paused. Start when your funding plan is ready.</div>
-        <div class="hud-controls" aria-label="Simulation controls"><button class="game-button" type="button" data-pause>Start</button><button class="speed-button" type="button" data-speed="1" aria-pressed="true">1×</button><button class="speed-button" type="button" data-speed="2" aria-pressed="false">2×</button><button class="speed-button" type="button" data-speed="4" aria-pressed="false">4×</button><button class="speed-button" type="button" data-speed="8" aria-pressed="false">8×</button><button class="speed-button" type="button" data-speed="16" aria-pressed="false">16×</button><button class="speed-button" type="button" data-speed="32" aria-pressed="false">32×</button><button class="game-button" type="button" data-step>+1 week</button><button class="game-button" type="button" data-save>Save</button><button class="game-button" type="button" data-reset>Reset</button><span data-time-summary>1× · 1 week every 8 seconds</span></div>
-        <div class="mission-strip"><span><strong>Mission:</strong> 5,000 → 10,000 tamarins. Below 1,000 ends the campaign.</span><span class="status-stamp" data-route-status>Disconnected</span></div>
+        <div class="game-footer-bar"><div class="hud-controls" aria-label="Simulation controls"><button class="game-button" type="button" data-pause>Start</button><button class="speed-button" type="button" data-speed="1" aria-pressed="true">1×</button><button class="speed-button" type="button" data-speed="2" aria-pressed="false">2×</button><button class="speed-button" type="button" data-speed="4" aria-pressed="false">4×</button><button class="speed-button" type="button" data-speed="8" aria-pressed="false">8×</button><button class="speed-button" type="button" data-speed="16" aria-pressed="false">16×</button><button class="speed-button" type="button" data-speed="32" aria-pressed="false">32×</button><button class="game-button" type="button" data-step>+1 week</button><button class="game-button" type="button" data-save>Save</button><button class="game-button" type="button" data-reset>Reset</button><span data-time-summary>1× · 1 week every 8 seconds</span></div><div class="mission-strip"><span><strong>Mission:</strong> 5,000 → 10,000 tamarins. Below 1,000 ends the campaign.</span><span class="status-stamp" data-route-status>Disconnected</span></div></div>
         <section class="tutorial-panel" data-tutorial hidden aria-label="Guided conservation tutorial"><div><span class="eyebrow">Guided tutorial</span><h2 data-tutorial-title></h2><p data-tutorial-copy></p></div><button class="game-button" type="button" data-tutorial-next>Take the next step</button></section>
       </div>
-      <aside class="game-sidebar" aria-label="Local programs and population recovery">
-        <section class="side-panel"><h2>Local programs</h2><p class="fact-note">Setup is paid now; weekly care continues until the run ends or you pause after the minimum commitment.</p>
-          <button class="program-button" type="button" data-service="outreach" aria-pressed="false">Community outreach<small></small></button>
-          <button class="program-button" type="button" data-service="monitoring" aria-pressed="false">Field monitoring<small></small></button>
-          <button class="program-button" type="button" data-service="nursery" aria-pressed="false">Nursery care<small></small></button>
-          <button class="program-button" type="button" data-service="health" aria-pressed="false">Wildlife veterinary team<small></small></button>
-          <button class="program-button" type="button" data-service="fireWatch" aria-pressed="false">Fire preparedness<small></small></button>
-        </section>
-        <section class="side-panel population-panel"><h2>Bring the population back</h2><label for="population-progress">Recovery toward 10,000 tamarins</label><progress id="population-progress" data-population-progress max="10000" value="5000">5,000 of 10,000</progress><div class="population-scale"><span>Below 1,000: game over</span><span>10,000: recovered</span></div><p data-population-change></p><p data-population-reason></p><ul class="objectives"><li data-objective="population"></li><li data-objective="network"></li><li data-objective="forest"></li><li data-objective="health"></li><li data-objective="community"></li><li data-objective="stability"></li></ul><details><summary>What changes the population?</summary><p>Births need paid care, habitat health of at least 50%, and spare habitat capacity. Isolation reduces births and increases mortality. Crowding, poor health, unpaid bills, and threats cause losses. Vaccination reduces yellow fever losses; fire teams reduce fire losses. Bridges connect groves, but trees create habitat. See Budget details for the most recent week.</p><p>All rates, costs, and population targets are fictional game settings, not field predictions.</p></details></section>
-        <details class="side-panel"><summary>Planning advice</summary><p data-advisor></p><p>This is a suggestion, not an automatic action. You decide when to act.</p></details>
-      </aside>
     </div>
   </main>
   <dialog class="game-dialog" data-report-dialog aria-labelledby="report-title"><div class="dialog-content"><span class="status-stamp" data-report-stamp>Annual report</span><h2 id="report-title" data-report-title>Year report</h2><p data-report-copy></p><div class="report-grid"><div><small>Closing funds</small><strong data-report="funds">—</strong></div><div><small>Forest cover</small><strong data-report="forest">—</strong></div><div><small>Habitat capacity</small><strong data-report="capacity">—</strong></div><div><small>Tamarins</small><strong data-report="tamarins">—</strong></div></div><p data-score-message></p><form method="dialog"><div class="button-row"><button class="button" type="submit" value="continue" data-report-continue>Continue the campaign</button><button class="button secondary" type="button" data-report-reset hidden>Reset game</button><button class="button secondary" type="button" data-report-leaderboard hidden>Leaderboard</button><button class="game-button" type="button" data-report-share hidden>Share result online</button></div></form></div></dialog>
@@ -110,6 +118,6 @@
     </div>
   </dialog>
   <dialog class="game-dialog leaderboard-dialog" data-leaderboard-dialog aria-labelledby="leaderboard-title"><div class="dialog-content"><div class="dialog-heading"><h2 id="leaderboard-title">Forest recoveries</h2><button class="game-button" type="button" data-close-dialog>Close</button></div><p>Completed campaigns, separated by difficulty and leaderboard. Wins rank by fewest simulated weeks, then highest remaining credits. Tutorial runs are practice, not ranked. Browser scores are not verified.</p><label for="leaderboard-scope">Leaderboard</label><select id="leaderboard-scope" data-leaderboard-scope><option value="device">This device</option><option value="online" data-online-scope-option disabled>Online · unverified</option></select><label for="leaderboard-mode">Difficulty</label><select id="leaderboard-mode" data-leaderboard-mode><option value="standard">Standard</option><option value="explorer">Explorer</option><option value="challenge">Challenge</option><option value="expert">Expert</option><option value="tutorial">Tutorial · practice</option></select><div class="accounts-scroll"><table class="campaign-table"><thead><tr><th>Rank</th><th>Player</th><th>Outcome</th><th>Weeks</th><th>Tamarins</th><th>FC left</th></tr></thead><tbody data-leaderboard-rows></tbody></table></div><p data-leaderboard-empty></p></div></dialog>
-  <script type="module" src="js/game.js?v=20261103-forest-redesign-1"></script>
+  <script type="module" src="js/game.js?v=20261106-immersive-1"></script>
 </body>
 </html>

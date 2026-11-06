@@ -1,5 +1,5 @@
-import {DIFFICULTIES,createInitialState} from './game-core.js?v=20261103-forest-redesign-1';
-import {forestSceneArtwork} from './forest-scene.js?v=20261103-forest-redesign-1';
+import {DIFFICULTIES,createInitialState} from './game-core.js?v=20261106-immersive-1';
+import {forestSceneArtwork} from './forest-scene.js?v=20261106-immersive-1';
 
 document.querySelector('[data-landscape-preview]').innerHTML=forestSceneArtwork(createInitialState());
 const body=document.querySelector('[data-mode-table]');

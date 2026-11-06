@@ -72,7 +72,7 @@ export function createInitialState(seed=73,difficulty='standard') {
     balanceFC:12000,previousYearEndBalanceFC:12000,yearlyIncomeFC:0,yearlyExpensesFC:0,
     decliningBalanceYears:0,shortfallWeeks:0,sustainableYears:0,awareness:38,evidence:0,
     patches:PATCHES.map(patch=>({...patch,health:78,vaccinated:0,populationRemainder:0,lastAdversity:null})),
-    links:LINKS.map(link=>({...link,agreement:false,agreementDue:null,bridgeDue:null,bridgeRemainingWeeks:null,built:false,condition:100,planted:false,age:0,survival:100,crossings:0})),
+    links:LINKS.map(link=>({...link,agreement:false,agreementDue:null,bridgeDue:null,bridgeRemainingWeeks:null,built:false,condition:100,planted:false,age:0,survival:100,crossings:0,repairReadyWeek:0})),
     services:{outreach:false,monitoring:false,nursery:false,health:false,fireWatch:false},programTimers:{},reportWork:0,fundraisers:[],cooldowns:{},
     annualReports:[],ledger:[],lastWeek:null,events:[],eventCounter:0,crossingCount:0,monkeyCount:5000,
     lastFunded:true,adversityHistory:[],nextAdversity:{type:'yellow-fever',week:78,patchId:'a'},
@@ -80,13 +80,21 @@ export function createInitialState(seed=73,difficulty='standard') {
   };
 }
 export function activeLink(link) { return link.built&&link.condition>=45&&link.agreement; }
+export function getTamarinPositions(state){
+  return state.links.filter(activeLink).sort((first,second)=>(first.bridgeOpenedWeek??-1)-(second.bridgeOpenedWeek??-1)).flatMap((route,routeIndex)=>{
+    const from=PATCHES.find(patch=>patch.id===route.from),to=PATCHES.find(patch=>patch.id===route.to);
+    const elapsed=Math.max(0,state.totalWeeks-(route.bridgeOpenedWeek??0));
+    const groupSize=route.planted&&route.age>=52?3:2;
+    return Array.from({length:groupSize},(_,memberIndex)=>{
+      const phase=((elapsed+4+routeIndex*3+memberIndex*5)%16)/8,progress=phase<=1?phase:2-phase;
+      const movingForward=phase<=1,facing=(to.x-from.x)*(movingForward?1:-1)>=0?'right':'left';
+      return {id:`${route.id}-${memberIndex}`,routeId:route.id,x:from.x+(to.x-from.x)*progress,y:from.y+(to.y-from.y)*progress,facing};
+    });
+  });
+}
 export function getTamarinPosition(state){
-  const route=state.links.filter(link=>link.built).sort((first,second)=>(first.bridgeOpenedWeek??-1)-(second.bridgeOpenedWeek??-1))[0];
-  if(!route||!activeLink(route))return null;
-  const from=PATCHES.find(patch=>patch.id===route.from),to=PATCHES.find(patch=>patch.id===route.to);
-  const elapsed=Math.max(0,state.totalWeeks-(route.bridgeOpenedWeek??0));
-  const phase=((elapsed+4)%16)/8,progress=phase<=1?phase:2-phase;
-  return {routeId:route.id,x:from.x+(to.x-from.x)*progress,y:from.y+(to.y-from.y)*progress};
+  const position=getTamarinPositions(state)[0];
+  return position?{routeId:position.routeId,x:position.x,y:position.y}:null;
 }
 export function matureLink(link) { return activeLink(link)&&link.planted&&link.age>=TREE_MATURITY_WEEKS&&link.survival>=60; }
 export function reachable(state,start,matureOnly=false) {
@@ -175,14 +183,15 @@ export function getMetrics(state) {
     cost,support,burn:cost-support,runway:cost>support?Math.floor(state.balanceFC/(cost-support)):Infinity};
 }
 const result=(state,ok,message)=>({state,ok,message});
-export function describeLink(link) {
-  return `${link.name}: agreement ${link.agreement?'active':link.agreementDue?'negotiating':'needed'}; bridge ${link.built?`${Math.round(link.condition)}% condition`:link.bridgeDue?'building':`${link.cost} FC`}; ${link.planted?`trees ${Math.floor(link.age/52)} years old, ${Math.round(link.survival)}% survival`:'planting 1,200 FC after bridge completion'}. Care ${9+(link.built?15:0)+(link.planted?16:0)} FC/week. ${link.crossings} observed crossings.`;
+export function describeLink(link,totalWeeks=0) {
+  const repairWait=Math.max(0,(link.repairReadyWeek||0)-totalWeeks);
+  return `${link.name}: agreement ${link.agreement?'active':link.agreementDue?'negotiating':'needed'}; bridge ${link.built?`${Math.round(link.condition)}% condition`:link.bridgeDue?'building':`${link.cost} FC`}; ${link.planted?`trees ${Math.floor(link.age/52)} years old, ${Math.round(link.survival)}% survival`:'planting 1,200 FC after bridge completion'}. Care ${9+(link.built?15:0)+(link.planted?16:0)} FC/week. ${repairWait?`Repair team returns in ${repairWait} weeks. `:''}${link.crossings} observed crossings.`;
 }
 export function applyTool(oldState,tool,id) {
   if(oldState.status!=='playing') return result(oldState,false,'Reset the campaign to start again.');
   const state=clone(oldState),link=state.links.find(entry=>entry.id===id);
   if(!link) return result(oldState,false,'Choose a named route between groves.');
-  if(tool==='inspect') return result(state,true,describeLink(link));
+  if(tool==='inspect') return result(state,true,describeLink(link,state.totalWeeks));
   if(tool==='agreement') {
     if(link.agreement||link.agreementDue) return result(oldState,false,'This agreement is active or being negotiated.');
     if(state.awareness<30) return result(oldState,false,'Community trust must reach 30 before negotiations. Fund outreach first.');
@@ -203,11 +212,14 @@ export function applyTool(oldState,tool,id) {
     link.planted=true;
   } else if(tool==='repair') {
     if(!link.built) return result(oldState,false,'There is no bridge here to repair.');
+    const wait=Math.max(0,(link.repairReadyWeek||0)-state.totalWeeks);
+    if(wait) return result(oldState,false,`Repair and reseeding can be done once every four weeks. Ready again in ${wait} week${wait===1?'':'s'}.`);
+    if(link.condition>=100&&(!link.planted||link.survival>=100)) return result(oldState,false,'This bridge and its planted corridor do not need repair or reseeding.');
     if(!pay(state,500,'Bridge repair')) return result(oldState,false,'Need 500 FC for repair and replanting.');
-    link.condition=100;if(link.planted)link.survival=Math.min(100,link.survival+25);
+    link.condition=100;if(link.planted)link.survival=Math.min(100,link.survival+25);link.repairReadyWeek=state.totalWeeks+4;
   } else return result(oldState,false,'Choose a route tool.');
   event(state,`${tool}: ${link.name}. Balance ${Math.round(state.balanceFC)} FC.`,'build');
-  return result(state,true,describeLink(link));
+  return result(state,true,describeLink(link,state.totalWeeks));
 }
 export function toggleService(oldState,name) {
   if(!(name in SERVICES)||oldState.status!=='playing')return result(oldState,false,'Program unavailable.');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createInitialState,applyTool,simulateOneWeek,getTamarinPosition,PATCHES} from '../js/game-core.js';
+import {createInitialState,applyTool,simulateOneWeek,getTamarinPosition,getTamarinPositions,PATCHES} from '../js/game-core.js';
 
 function advance(state,weeks){
   state={...state,paused:false};
@@ -20,7 +20,8 @@ test('monkey is hidden initially and throughout negotiation and construction',as
   state=applyTool(state,'bridge','cf').state;state=advance(state,15);
   assert.equal(getTamarinPosition(state),null);
   const html=await readFile(new URL('../game.html',import.meta.url),'utf8');
-  assert.match(html,/data-tamarin[^>]* hidden/);
+  assert.match(html,/data-tamarin-layer/);
+  assert.doesNotMatch(html,/data-tamarin[^-]/);
 });
 test('first completed bridge spawns a midpoint monkey that travels between its groves',()=>{
   let state=openBridge(createInitialState(),'cf');
@@ -35,14 +36,14 @@ test('first completed bridge spawns a midpoint monkey that travels between its g
   state=advance(state,4);
   assert.equal(getTamarinPosition(state).y,(from.y+to.y)/2);
 });
-test('later bridges do not redirect the monkey toward West reserve; closed bridges hide it',()=>{
+test('each open bridge keeps its own tamarins and closing one route leaves the others visible',()=>{
   let state=createInitialState();state.balanceFC=100000;
   state=openBridge(state,'cf');state=openBridge(state,'ab');
-  assert.equal(getTamarinPosition(state).routeId,'cf');
-  assert.equal(getTamarinPosition(JSON.parse(JSON.stringify(state))).routeId,'cf');
+  assert.deepEqual(new Set(getTamarinPositions(state).map(position=>position.routeId)),new Set(['cf','ab']));
+  assert.deepEqual(getTamarinPositions(JSON.parse(JSON.stringify(state))),getTamarinPositions(state));
   const first=state.links.find(link=>link.id==='cf');first.condition=44;
-  assert.equal(getTamarinPosition(state),null);
-  first.condition=100;assert.equal(getTamarinPosition(state).routeId,'cf');
+  assert.deepEqual(new Set(getTamarinPositions(state).map(position=>position.routeId)),new Set(['ab']));
+  first.condition=100;assert.deepEqual(new Set(getTamarinPositions(state).map(position=>position.routeId)),new Set(['cf','ab']));
   assert.equal(getTamarinPosition(createInitialState()),null);
 });
 test('older saves with an open bridge remain playable without completion timestamps',()=>{

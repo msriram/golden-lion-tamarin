@@ -1,9 +1,9 @@
-import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,activeLink,getMetrics,getTamarinPosition,speedIntervalMs,simulateOneWeek,startFundraiser,toggleService} from './game-core.js?v=20261103-forest-redesign-1';
-import {forestSceneArtwork,routeGeometry} from './forest-scene.js?v=20261103-forest-redesign-1';
-import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261103-forest-redesign-1';
-import {createPlayerStore,rankScores} from './game-players.js?v=20261103-forest-redesign-1';
-import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261103-forest-redesign-1';
-import {attachMapViewport} from './map-viewport.js?v=20261103-forest-redesign-1';
+import {PATCHES,FUNDRAISERS,SERVICES,PROGRAMS,ADVERSITIES,GRANT_REQUIREMENTS,getDifficulty,fundingAward,weeklyBudget,getPopulationExplanation,corridorGrowth,habitatCapacity,plantingSeason,createInitialState,applyTool,activeLink,getMetrics,getTamarinPositions,speedIntervalMs,simulateOneWeek,startFundraiser,toggleService} from './game-core.js?v=20261106-immersive-1';
+import {forestSceneArtwork,routeGeometry} from './forest-scene.js?v=20261106-immersive-1';
+import {getTutorialStep,performTutorialStep,getRecommendedStep} from './game-guide.js?v=20261106-immersive-1';
+import {createPlayerStore,rankScores} from './game-players.js?v=20261106-immersive-1';
+import {onlineConfigured,recordProjectInterest,withdrawProjectInterest,submitOnlineScore,fetchOnlineLeaderboard} from './game-online.js?v=20261106-immersive-1';
+import {attachMapViewport} from './map-viewport.js?v=20261106-immersive-1';
 
 let browserStorage;
 try{browserStorage=window.localStorage;}catch{}
@@ -20,9 +20,8 @@ function prepareCampaign(saved){
   return campaign;
 }
 let state=prepareCampaign(players.loadCampaign());
-let tool='inspect',timer=null,terminalShown=false;
+let timer=null,terminalShown=false;
 let selection=null;
-const toolNames={inspect:'Inspect',agreement:'Negotiate',bridge:'Build bridge',restore:'Plant cover',repair:'Repair & replant'};
 document.querySelector('[data-difficulty]').value=state.difficulty;
 function save(){players.saveCampaign(state);if(!players.persistent)message('Browser storage is unavailable. Progress and scores last only for this session.','error');}
 function message(copy,tone=''){const target=document.querySelector('[data-game-message]');target.textContent=copy;target.className=`game-message ${tone}`;}
@@ -69,58 +68,44 @@ function renderResources(metrics){
     element.textContent=`${met?'✓':'○'} ${label}: ${Math.floor(value)} / ${target}`;element.classList.toggle('met',met);
   }
 }
-function allocateSupportItems(budget){
-  let cumulativeBase=0,allocatedFC=0;
-  return budget.income.map(item=>{
-    cumulativeBase+=item.baseFC;
-    const cumulativeFC=Math.floor(cumulativeBase*budget.incomeMultiplier),amount=cumulativeFC-allocatedFC;
-    allocatedFC=cumulativeFC;return {label:item.category,amount};
-  });
+function selectRoute(id){
+  selection={type:'route',id};highlightRoute(id);renderInspector();positionMapOverlays();
+  const link=state.links.find(entry=>entry.id===id);
+  message(`${link.name} selected. Choose an action beside the pathway.`);
+  revealSelection();
 }
-function flowDetails(items,direction,empty){
-  const active=items.filter(item=>item.amount>0),visible=active.slice(0,3);
-  if(!visible.length)return empty;
-  const sign=direction==='income'?'+':'−',copy=visible.map(item=>`${item.label} ${sign}${number(item.amount)}`);
-  if(active.length>visible.length)copy.push(`+${active.length-visible.length} more`);
-  return copy.join(' · ');
-}
-function renderCashFlow(){
-  const budget=weeklyBudget(state),incomeItems=allocateSupportItems(budget),expenseItems=budget.items.map(item=>({label:item.label,amount:item.amount}));
-  document.querySelector('[data-cashflow-in]').textContent=`+${number(budget.support)} FC/week`;
-  document.querySelector('[data-cashflow-in-detail]').textContent=flowDetails(incomeItems,'income','No recurring income yet—build community trust.');
-  document.querySelector('[data-cashflow-out]').textContent=`−${number(budget.cost)} FC/week`;
-  document.querySelector('[data-cashflow-out-detail]').textContent=flowDetails(expenseItems,'expense','No recurring expenses.');
-  const net=document.querySelector('[data-cashflow-net]');net.textContent=`${signed(budget.net)} FC/week`;net.dataset.tone=budget.net>0?'income':budget.net<0?'expense':'neutral';
-  const recurring=new Set(['Recurring supporters','Weekly operations','Partial operations payment']);
-  const latest=[...state.ledger].reverse().find(entry=>!recurring.has(entry.category));
-  const amount=document.querySelector('[data-cashflow-latest-amount]'),detail=document.querySelector('[data-cashflow-latest-detail]');
-  if(latest){amount.textContent=signed(latest.amount)+' FC';amount.dataset.tone=latest.amount>0?'income':'expense';detail.textContent=`${latest.category} · ${ledgerDate(latest)}`;}
-  else if(state.lastWeek){amount.textContent=signed(state.lastWeek.netFC)+' FC';amount.dataset.tone=state.lastWeek.netFC>0?'income':state.lastWeek.netFC<0?'expense':'neutral';detail.textContent=`Week ${state.lastWeek.week}: supporters +${number(state.lastWeek.budget.support)} · operations −${number(state.lastWeek.operationsPaidFC)}`;}
-  else{amount.textContent='—';amount.dataset.tone='neutral';detail.textContent='No transactions yet. Weekly forecast shown at left.';}
-}
-function actOnRoute(id){
-  selection={type:'route',id};const response=applyTool(state,tool,id);handle(response);
+function actOnRoute(id,action){
+  selection={type:'route',id};const response=applyTool(state,action,id);handle(response);
   if(response.ok){
     const link=state.links.find(entry=>entry.id===id);
-    const feedback={inspect:`Inspecting ${link.name}. No funds spent.`,agreement:`Negotiations started for ${link.name}. 600 FC paid; agreement due in 12 weeks.`,bridge:`Construction started on ${link.name}. ${number(link.cost)} FC paid; completion in 16 funded weeks.`,restore:`Native trees planted along ${link.name}. 1,200 FC paid. Keep caring for them as cover expands over four years.`,repair:`${link.name} repaired. 500 FC paid; bridge condition restored to 100%.`};
+    const feedback={inspect:`Inspecting ${link.name}. No funds spent.`,agreement:`Negotiations started for ${link.name}. 600 FC paid; agreement due in 12 weeks.`,bridge:`Construction started on ${link.name}. ${number(link.cost)} FC paid; completion in 16 funded weeks.`,restore:`Native trees planted along ${link.name}. 1,200 FC paid. Keep caring for them as cover expands over four years.`,repair:`${link.name} repaired and reseeded. 500 FC paid; this action is available again in four weeks.`};
     const budget=weeklyBudget(state);
-    message(feedback[tool]+(tool==='inspect'?'':` Current recurring net: ${signed(budget.net)} FC/week. Budget → Details shows future care obligations as projects complete.`),'success');
+    message(feedback[action]+(action==='inspect'?'':` Current recurring net: ${signed(budget.net)} FC/week. Budget → Details shows future care obligations as projects complete.`),'success');
   }
+  highlightRoute(id);positionMapOverlays();
   revealSelection();
 }
 function renderInspector(){
-  document.querySelector('[data-selection-panel]').hidden=!selection;
-  document.querySelector('[data-selected-tool]').textContent=`Tool: ${toolNames[tool]}`;
+  const panel=document.querySelector('[data-selection-panel]'),actions=document.querySelector('[data-route-action-grid]');
+  panel.hidden=!selection;actions.hidden=selection?.type!=='route';
+  document.querySelector('[data-selected-tool]').textContent=selection?.type==='route'?'Pathway actions':'Grove details';
   const title=document.querySelector('[data-inspector-title]'),copy=document.querySelector('[data-inspector]'),status=document.querySelector('[data-inspector-status]');
   status.replaceChildren();
   if(!selection){title.textContent='';copy.textContent='';return;}
   const fields=selection.type==='route'?(()=>{
-    const link=state.links.find(entry=>entry.id===selection.id);title.textContent=link.name;
-    copy.textContent=link.agreementDue?`Negotiations are underway. Wait ${link.agreementDue-state.totalWeeks} weeks before construction.`:!link.agreement?'Next: negotiate land access. It costs 600 FC and takes 12 weeks.':link.bridgeDue?'Construction is underway. Keep weekly bills funded until the bridge opens.':!link.built?`Next: build this bridge for ${number(link.cost)} FC. One crew is available; construction takes 16 funded weeks.`:!activeLink(link)?'This bridge is closed. Use Repair & replant to restore its condition.':!link.planted?'Next: plant native tree cover in the wet season for 1,200 FC. Trees expand habitat as they grow.':'Maintain the bridge and seedlings. Healthy tree cover expands habitat and supports population recovery.';
+    const link=state.links.find(entry=>entry.id===selection.id),repairWait=Math.max(0,(link.repairReadyWeek||0)-state.totalWeeks);title.textContent=link.name;
+    copy.textContent=link.agreementDue?`Negotiations are underway. Wait ${link.agreementDue-state.totalWeeks} weeks before construction.`:!link.agreement?'Choose Negotiate to seek land access. It costs 600 FC and takes 12 weeks.':link.bridgeDue?'Construction is underway. Keep weekly bills funded until the bridge opens.':!link.built?`Choose Build bridge when ready. This route costs ${number(link.cost)} FC and takes 16 funded weeks.`:!activeLink(link)?'This bridge is closed. Repair it when the four-week crew cooldown is complete.':!link.planted?'Choose Plant cover during the wet season. Trees grow beside the road and expand habitat over four years.':repairWait?`The bridge and seedlings were just cared for. Repair & reseed returns in ${repairWait} weeks.`:'Maintain the bridge and seedlings. Healthy tree cover expands habitat and supports population recovery.';
+    document.querySelector('[data-repair-action-copy]').textContent=repairWait?`Ready in ${repairWait} week${repairWait===1?'':'s'}`:'500 FC · 4-week cooldown';
+    const crewBusy=state.links.some(entry=>entry.bridgeDue&&entry.id!==link.id);
+    const unavailable={inspect:false,agreement:!!link.agreement||!!link.agreementDue||state.awareness<30||state.balanceFC<600,bridge:!link.agreement||!!link.built||!!link.bridgeDue||crewBusy||state.balanceFC<link.cost,restore:!activeLink(link)||!!link.planted||!plantingSeason(state)||state.balanceFC<1200,repair:!link.built||repairWait>0||state.balanceFC<500||(link.condition>=100&&(!link.planted||link.survival>=100))};
+    for(const button of actions.querySelectorAll('[data-route-action]')){
+      const blocked=state.status!=='playing'||unavailable[button.dataset.routeAction];
+      button.setAttribute('aria-disabled',String(blocked));button.classList.toggle('unavailable',blocked);
+    }
     return [['Land agreement',link.agreement?'Agreement signed':link.agreementDue?`Negotiating · ${link.agreementDue-state.totalWeeks} weeks left`:'Not negotiated'],['Bridge',link.bridgeDue?`Building · ${Math.max(0,link.bridgeDue-state.totalWeeks)} weeks${link.bridgeDue<=state.totalWeeks?' · waiting for funds':' left'}`:link.built?`${activeLink(link)?'Open':'Closed'} · ${Math.round(link.condition)}% condition`:'Not built'],['Tree cover',link.planted?`${Math.round(link.age/52*10)/10} years · ${Math.round(link.survival)}% survival`:'Not planted']];
   })():(()=>{
     const patch=state.patches.find(entry=>entry.id===selection.id);title.textContent=patch.name;
-    copy.textContent=`${number(patch.population)} tamarins; habitat capacity ${number(habitatCapacity(state,patch))}. ${tool==='inspect'?'Click a named route on the map for land, bridge, and planting details.':`Click a named route on the map to ${toolNames[tool].toLowerCase()}.`}`;
+    copy.textContent=`${number(patch.population)} tamarins; habitat capacity ${number(habitatCapacity(state,patch))}. Click a pathway to inspect it and choose a conservation action.`;
     return [['Population',number(patch.population)],['Habitat health',`${Math.round(patch.health)}%`],['Vaccinated',`${Math.round(patch.vaccinated*100)}%`]];
   })();
   for(const [label,value] of fields){const item=document.createElement('div'),term=document.createElement('dt'),detail=document.createElement('dd');term.textContent=label;detail.textContent=value;item.append(term,detail);status.append(item);}
@@ -141,13 +126,27 @@ function positionMapOverlays(view=mapView?.snapshot()){
     label.hidden=screenX<0||screenX>view.width||screenY<0||screenY>view.height;
   }
   const caption=host.querySelector('[data-route-caption]'),route=state.links.find(entry=>entry.id===highlightedRoute);
-  caption.hidden=!route;
+  caption.hidden=!route||(selection?.type==='route'&&selection.id===route.id);
   if(route){
     const point=routeGeometry(route,sceneLayout).middle;
     caption.style.left=`${Math.max(90,Math.min(view.width-90,view.offsetX+point.x*view.scale))}px`;
     caption.style.top=`${Math.max(20,Math.min(view.height-55,view.offsetY+point.y*view.scale+20))}px`;
     caption.querySelector('strong').textContent=route.name;
     caption.querySelector('small').textContent=route.bridgeDue?`Building · ${route.bridgeRemainingWeeks??route.bridgeDue-state.totalWeeks} weeks`:route.agreementDue?`Negotiating · ${route.agreementDue-state.totalWeeks} weeks`:route.planted?`${Math.floor(route.age/52)} years · ${Math.round(corridorGrowth(route)*100)}% canopy`:route.built?`${Math.round(route.condition)}% bridge condition`:route.agreement?'Permission agreed · ready to build':'Land permission needed';
+  }
+  const panel=host.querySelector('[data-selection-panel]');
+  if(selection&&!panel.hidden){
+    let point;
+    if(selection.type==='route')point=routeGeometry(state.links.find(entry=>entry.id===selection.id),sceneLayout).middle;
+    else{
+      const patch=PATCHES.find(entry=>entry.id===selection.id);
+      point={x:patch.x*10*sceneLayout.x,y:patch.y*6.6*sceneLayout.y};
+    }
+    const screenX=view.offsetX+point.x*view.scale,screenY=view.offsetY+point.y*view.scale;
+    const showBelow=screenY<Math.min(255,view.height*.42);
+    panel.classList.toggle('below-route',showBelow);
+    panel.style.left=`${Math.max(245,Math.min(view.width-245,screenX))}px`;
+    panel.style.top=`${Math.max(12,Math.min(view.height-78,screenY+(showBelow?24:-22)))}px`;
   }
 }
 function highlightRoute(id){
@@ -167,16 +166,23 @@ function renderMap(){
       const label=document.createElement('span');label.dataset.groveLabel=patch.id;label.textContent=patch.name;labels.append(label);
     }
   }
-  const token=document.querySelector('[data-tamarin]'),position=getTamarinPosition(state);
-  token.hidden=!position;
-  if(position){
+  const layer=document.querySelector('[data-tamarin-layer]'),positions=getTamarinPositions(state),existing=new Map([...layer.children].map(token=>[token.dataset.tamarinId,token]));
+  for(const position of positions){
+    let token=existing.get(position.id);
+    if(!token){
+      token=document.createElement('div');token.className='tamarin-token';token.dataset.tamarinId=position.id;
+      token.innerHTML='<svg viewBox="-32 -22 60 48" aria-hidden="true"><use href="#golden-tamarin"/></svg>';
+      layer.append(token);
+    }
+    existing.delete(position.id);token.dataset.routeId=position.routeId;token.dataset.facing=position.facing;
+    token.style.setProperty('--tamarin-travel',`${Math.max(.25,speedIntervalMs(state.speed)/1000*.88)}s`);
     token.style.left=`${position.x}%`;token.style.top=`${position.y}%`;
     const route=state.links.find(entry=>entry.id===position.routeId);
     const from=PATCHES.find(entry=>entry.id===route.from),to=PATCHES.find(entry=>entry.id===route.to);
     const fraction=Math.abs(to.x-from.x)>.1?(position.x-from.x)/(to.x-from.x):(position.y-from.y)/(to.y-from.y);
     token.style.marginTop=`${4*fraction*(1-fraction)*12}px`;
-    token.innerHTML='<svg viewBox="-32 -22 60 48" aria-hidden="true"><use href="#golden-tamarin"/></svg>';
   }
+  for(const token of existing.values())token.remove();
   highlightRoute(highlightedRoute);
   if(focus)map.querySelector(`[data-route="${focus}"]`)?.focus({preventScroll:true});
   else if(patchFocus)map.querySelector(`[data-patch="${patchFocus}"]`)?.focus({preventScroll:true});
@@ -188,13 +194,13 @@ map.addEventListener('pointerover',event=>{
 map.addEventListener('pointerout',event=>{
   if(event.pointerType==='touch')return;
   const route=event.target.closest('[data-route]');
-  if(route&&!route.contains(event.relatedTarget))highlightRoute(null);
+  if(route&&!route.contains(event.relatedTarget))highlightRoute(selection?.type==='route'?selection.id:null);
 });
 map.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible'))highlightRoute(event.target.closest('[data-route]')?.dataset.route||null);});
-map.addEventListener('focusout',event=>{if(!event.relatedTarget?.closest('[data-route]'))highlightRoute(null);});
+map.addEventListener('focusout',event=>{if(!event.relatedTarget?.closest('[data-route]'))highlightRoute(selection?.type==='route'?selection.id:null);});
 function activateMapTarget(event){
   const route=event.target.closest('[data-route]'),patch=event.target.closest('[data-patch]');
-  if(route){highlightRoute(route.dataset.route);actOnRoute(route.dataset.route);}
+  if(route)selectRoute(route.dataset.route);
   else if(patch){
     highlightRoute(null);selection={type:'patch',id:patch.dataset.patch};
     const area=state.patches.find(entry=>entry.id===patch.dataset.patch);
@@ -203,7 +209,6 @@ function activateMapTarget(event){
   }else{highlightRoute(null);selection=null;renderInspector();}
 }
 map.addEventListener('click',activateMapTarget);
-document.addEventListener('click',event=>{if(!event.target.closest('[data-route]'))highlightRoute(null);});
 map.addEventListener('keydown',event=>{
   if((event.key==='Enter'||event.key===' ')&&event.target.closest('[data-route],[data-patch]')){event.preventDefault();activateMapTarget(event);}
 });
@@ -232,7 +237,11 @@ function renderFinance(metrics){
     button.setAttribute('aria-pressed',String(active));button.disabled=state.status!=='playing'||(!active&&rest>0)||(active&&commit>0);
     const status=active?`Running: ${timer.endsAt-state.totalWeeks} weeks left${commit?`; committed ${commit} more`:'; pause available'}`:rest?`Turnaround: ${rest} weeks left`:`Start: ${config.setup} FC setup + ${Math.round(SERVICES[name]*getDifficulty(state).operations)}/week`;
     const benefits={outreach:'Paid weeks: +0.95 trust; without outreach, trust falls 0.25/week. Trust brings recurring supporters and reduces construction damage.',monitoring:'Paid weeks: +0.9 evidence, +1 reporting week. New grant reports need 4 paid weeks after the first installment.',nursery:'Paid care improves survival by 0.35 points/week in the two lowest-survival plantings.',health:'Paid weeks add vaccination gradually (1.2 percentage points, diluted by births); protection remains afterward.',fireWatch:'Reduces fire deaths and damage only while the response team is funded.'};
-    button.innerHTML=`${config.label}<small>${status}${active?`; ${Math.round(SERVICES[name]*getDifficulty(state).operations)} FC/week`:''}</small><small>${benefits[name]}</small><small>${config.limit}</small>`;
+    const statusCopy=`${status}${active?`; ${Math.round(SERVICES[name]*getDifficulty(state).operations)} FC/week`:''}`;
+    button.querySelector('[data-command-status]').textContent=statusCopy;
+    button.querySelector('[data-command-benefit]').textContent=benefits[name];
+    button.querySelector('[data-command-limit]').textContent=config.limit;
+    button.title=`${config.label}. ${statusCopy}`;button.setAttribute('aria-label',button.title);
   }
   const current=state.fundraisers.find(entry=>!entry.completed);
   document.querySelector('[data-campaign]').textContent=current?current.firstPaid?`Grant: first half received. Final half requires 13 weeks and four new paid monitoring weeks (${Math.min(4,state.reportWork-current.reportBaseline)}/4 complete).`:`${FUNDRAISERS[current.id].label}: ${Math.max(0,current.due-state.totalWeeks)} weeks remaining.`:'Fundraising team available. One campaign at a time.';
@@ -243,7 +252,9 @@ function renderFinance(metrics){
     if(id==='grant')document.querySelector('[data-grant-availability]').textContent=state.status!=='playing'?'Campaign ended':current?'Fundraising team busy':wait?`Renewal cooldown: ${wait} weeks`:lacksGrantRequirements?'Not ready · build the missing resources':state.balanceFC<config.cost?'Not ready · need application credits':'Ready to apply';
     const award=fundingAward(state,id);
     const reason=current?'Team busy. ':wait?`Cooldown: ${wait} weeks. `:state.balanceFC<config.cost?'Not enough setup credits. ':id==='appeal'&&state.balanceFC>=1000&&state.shortfallWeeks===0?'Only in a cash crisis below 1,000 FC. ':'';
-    button.querySelector('small').textContent=`${reason}${config.cost} FC now · ${config.duration} weeks · ${id==='grant'?`${number(budget.grant.firstInstallmentFC)} + ${number(budget.grant.finalInstallmentFC)} FC`:`base ${number(award)} FC${id==='appeal'?'':' (trust & turnout affect payout)'}`} · ${config.cooldown}-week rest after completion`;
+    const statusCopy=`${reason}${config.cost} FC now · ${config.duration} weeks · ${id==='grant'?`${number(budget.grant.firstInstallmentFC)} + ${number(budget.grant.finalInstallmentFC)} FC`:`base ${number(award)} FC${id==='appeal'?'':' (trust & turnout affect payout)'}`} · ${config.cooldown}-week rest after completion`;
+    button.querySelector('[data-command-status]').textContent=statusCopy;
+    button.title=`${config.label}. ${statusCopy}`;button.setAttribute('aria-label',button.title);
   }
   document.querySelector('[data-season]').textContent=plantingSeason(state)?`Wet-season planting window: ${22-state.totalWeeks%52} weeks remaining (October–February).`:`Dry season: planting opens in ${52-state.totalWeeks%52} weeks. Maintain existing seedlings now.`;
   const warning=state.nextAdversity.week-state.totalWeeks;
@@ -279,12 +290,9 @@ function render(){
   document.querySelector('[data-step]').disabled=state.status!=='playing'||state.difficulty==='tutorial';
   const seconds=speedIntervalMs(state.speed)/1000;
   document.querySelector('[data-time-summary]').textContent=state.difficulty==='tutorial'?'Guided time waits for your next decision.':`${state.speed}× · 1 week every ${seconds} ${seconds===1?'second':'seconds'} · ${state.paused?'paused':'running'}`;
-  const rate=getDifficulty(state).operations,weekly=value=>`${rate===1?'':'≈'}${Math.round(value*rate)}`;
-  const toolCosts={agreement:`600 FC · 12 weeks · +${weekly(9)}/week`,bridge:`1,800–3,400 FC · +${weekly(15)}/week`,restore:`1,200 FC · 4 years · +${weekly(16)}/week`};
-  document.querySelectorAll('[data-tool]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.tool===tool));button.disabled=state.status!=='playing';if(toolCosts[button.dataset.tool])button.querySelector('small').textContent=toolCosts[button.dataset.tool];});
   document.querySelector('[data-wildlife]').innerHTML=Object.entries(state.wildlife).map(([name,value])=>`<div class="wildlife-row"><span>${name}</span><strong>${value-100>=0?'+':''}${value-100}%</strong></div>`).join('');
   document.querySelector('[data-event-log]').innerHTML=state.events.map(entry=>`<li class="${entry.tone}"><time>${entry.week} weeks elapsed</time>${entry.message}</li>`).join('');
-  renderResources(metrics);renderCashFlow();renderMap();renderFinance(metrics);renderInspector();renderTutorial();
+  renderResources(metrics);renderInspector();renderMap();renderFinance(metrics);renderTutorial();positionMapOverlays();
   if(state.status!=='playing'&&!terminalShown){terminalShown=true;report();}
 }
 function report(annual=false){
@@ -313,16 +321,38 @@ function clock(){
   clearInterval(timer);if(state.paused||state.status!=='playing')return;
   timer=setInterval(()=>{state=simulateOneWeek(state);weekFeedback();if(state.totalWeeks%52===0&&state.status==='playing'){state.paused=true;clearInterval(timer);render();report(true);}else{render();if(state.status!=='playing')clearInterval(timer);}if(state.totalWeeks%4===0||state.paused)save();},speedIntervalMs(state.speed));
 }
-for(const button of document.querySelectorAll('[data-tool]'))button.addEventListener('click',()=>{tool=button.dataset.tool;message(`${button.querySelector('small')?.textContent||tool}. Select a named route on the map.`);render();});
+for(const button of document.querySelectorAll('[data-route-action]'))button.addEventListener('click',()=>{
+  if(selection?.type!=='route')return;
+  actOnRoute(selection.id,button.dataset.routeAction);
+});
 for(const button of document.querySelectorAll('[data-service]'))button.addEventListener('click',()=>handle(toggleService(state,button.dataset.service)));
 for(const button of document.querySelectorAll('[data-fundraiser]'))button.addEventListener('click',()=>handle(startFundraiser(state,button.dataset.fundraiser)));
+for(const button of document.querySelectorAll('[data-rail-toggle]'))button.addEventListener('click',()=>{
+  const rail=button.closest('[data-command-rail]'),opening=!rail.classList.contains('expanded');
+  for(const other of document.querySelectorAll('[data-command-rail]')){
+    const expanded=opening&&other===rail;other.classList.toggle('expanded',expanded);
+    other.querySelector('[data-rail-toggle]').setAttribute('aria-expanded',String(expanded));
+  }
+});
+function closeStatusDrawer(){
+  document.querySelector('[data-status-drawer]').hidden=true;
+  for(const panel of document.querySelectorAll('[data-status-panel]'))panel.hidden=true;
+  for(const button of document.querySelectorAll('[data-status-toggle]'))button.setAttribute('aria-expanded','false');
+}
+for(const button of document.querySelectorAll('[data-status-toggle]'))button.addEventListener('click',()=>{
+  const drawer=document.querySelector('[data-status-drawer]'),name=button.dataset.statusToggle,closing=button.getAttribute('aria-expanded')==='true';
+  closeStatusDrawer();
+  if(closing)return;
+  drawer.hidden=false;document.querySelector(`[data-status-panel="${name}"]`).hidden=false;button.setAttribute('aria-expanded','true');
+});
+document.querySelector('[data-status-close]').addEventListener('click',closeStatusDrawer);
 for(const button of document.querySelectorAll('[data-speed]'))button.addEventListener('click',()=>{state.speed=Number(button.dataset.speed);render();clock();});
 document.querySelector('[data-pause]').addEventListener('click',()=>{state.paused=!state.paused;render();clock();save();});
 document.querySelector('[data-save]').addEventListener('click',()=>{save();if(players.persistent)message(`Campaign saved on this device for ${players.current().nickname}.`);});
 function reset(difficulty=state.difficulty){
   if(dialog.open)dialog.close('reset');
   state=prepareCampaign(createInitialState(73,difficulty));document.querySelector('[data-difficulty]').value=state.difficulty;
-  selection=null;terminalShown=false;tool='inspect';render();clock();save();
+  selection=null;terminalShown=false;render();clock();save();
   message(state.difficulty==='tutorial'?'Follow the highlighted next step. Guided time advances only when you are ready.':`New ${getDifficulty(state).label} campaign. Start outreach and monitoring, plan fundraising, and keep reserves before building.`);
 }
 function requestReset(difficulty=state.difficulty){
@@ -333,13 +363,12 @@ document.querySelector('[data-reset]').addEventListener('click',()=>requestReset
 document.querySelector('[data-new-game]').addEventListener('click',()=>requestReset(document.querySelector('[data-difficulty]').value));
 document.querySelector('[data-difficulty]').addEventListener('change',()=>message(`${document.querySelector('[data-difficulty]').selectedOptions[0].textContent} selected. Press New game to apply; the current campaign stays ${getDifficulty(state).label}.`));
 document.querySelector('[data-step]').addEventListener('click',()=>{state=simulateOneWeek({...state,paused:false});state.paused=true;clock();weekFeedback();save();render();});
-document.querySelector('[data-inspector-close]').addEventListener('click',()=>{selection=null;render();});
+document.querySelector('[data-inspector-close]').addEventListener('click',()=>{selection=null;highlightRoute(null);render();});
 document.querySelector('[data-tutorial-next]').addEventListener('click',()=>{
   const step=getTutorialStep(state);
-  if(step.kind==='route'){selection={type:'route',id:step.id};tool=step.tool;}
+  if(step.kind==='route')selection={type:'route',id:step.id};
   handle(performTutorialStep(state));clock();
 });
-map.addEventListener('click',event=>{if(!event.target.closest('[data-route], [data-patch]')){message(`Choose a named route to ${toolNames[tool].toLowerCase()}, or a forest grove to see its connected routes.`);revealSelection();}});
 dialog.addEventListener('close',()=>{if(state.status==='playing'&&dialog.returnValue==='continue'&&state.difficulty!=='tutorial'){state.paused=false;clock();render();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){state.paused=true;clock();save();render();}});
 mapView=attachMapViewport(document.querySelector('.map-scroll'),document.querySelector('.map-wrap'),document.querySelector('.map-controls'),{onViewChange:positionMapOverlays});
@@ -348,7 +377,7 @@ function openPanel(panel){
   if(!panel.open)panel.showModal();
 }
 for(const button of document.querySelectorAll('[data-close-dialog]'))button.addEventListener('click',()=>button.closest('dialog').close());
-for(const button of document.querySelectorAll('[data-budget-open], [data-cashflow-details]'))button.addEventListener('click',()=>openPanel(document.querySelector('[data-budget-dialog]')));
+for(const button of document.querySelectorAll('[data-budget-open]'))button.addEventListener('click',()=>openPanel(document.querySelector('[data-budget-dialog]')));
 document.querySelector('[data-fullscreen]').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else message('This browser does not support full screen. The game already fills its window.','error');}
   catch{message('Full screen was blocked by the browser. You can keep playing in this window.','error');}
@@ -363,7 +392,7 @@ function refreshProfileList(){
 function switchPlayer(select){
   save();select();
   for(const panel of document.querySelectorAll('dialog[open]'))panel.close('switch');
-  state=prepareCampaign(players.loadCampaign());selection=null;tool='inspect';terminalShown=false;
+  state=prepareCampaign(players.loadCampaign());selection=null;terminalShown=false;
   document.querySelector('[data-difficulty]').value=state.difficulty;
   document.querySelector('[data-player-dialog]').close();clock();save();render();
   message(`${players.current().nickname}’s campaign. Progress is kept separately on this device.`);
@@ -377,7 +406,7 @@ document.querySelector('[data-player-form]').addEventListener('submit',event=>{
 document.querySelector('[data-guest]').addEventListener('click',()=>switchPlayer(()=>players.select('guest')));
 document.querySelector('[data-clear-player]').addEventListener('click',()=>{
   if(!window.confirm('Delete this local profile, its campaign save, and its leaderboard scores?'))return;
-  players.deleteCurrent();state=prepareCampaign(players.loadCampaign());selection=null;tool='inspect';terminalShown=false;document.querySelector('[data-difficulty]').value=state.difficulty;document.querySelector('[data-player-dialog]').close();save();render();clock();
+  players.deleteCurrent();state=prepareCampaign(players.loadCampaign());selection=null;terminalShown=false;document.querySelector('[data-difficulty]').value=state.difficulty;document.querySelector('[data-player-dialog]').close();save();render();clock();
 });
 function renderLeaderboard(){
   const mode=document.querySelector('[data-leaderboard-mode]').value,scores=rankScores(players.scores(),mode);

@@ -1,4 +1,4 @@
-import {PROGRAMS,FUNDRAISERS,applyTool,toggleService,startFundraiser,simulateOneWeek,getMetrics,plantingSeason,weeklyBudget,getPopulationExplanation} from './game-core.js?v=20261103-forest-redesign-1';
+import {PROGRAMS,FUNDRAISERS,applyTool,toggleService,startFundraiser,simulateOneWeek,getMetrics,plantingSeason,weeklyBudget,getPopulationExplanation} from './game-core.js?v=20261106-immersive-1';
 
 const routes=['ab','ad','be','ef','bc'];
 export function getRecommendedStep(state){

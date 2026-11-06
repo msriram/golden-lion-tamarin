@@ -10,13 +10,17 @@ test('game is a standalone application without website article framing',async()=
   const styles=await readFile(new URL('../game-shell.css',import.meta.url),'utf8');
   assert.match(styles,/\.game-frame\s*\{[^}]*max-width:none/);
   assert.match(styles,/\.map-scroll\s*\{[^}]*touch-action:none/);
-  for(const field of ['cashflow-net','cashflow-in','cashflow-in-detail','cashflow-out','cashflow-out-detail','cashflow-latest-amount','cashflow-latest-detail'])assert.match(html,new RegExp(`data-${field}`));
-  assert.match(html,/Full ledger/);assert.match(html,/Weekly money in/);assert.match(html,/Weekly money out/);assert.match(html,/Latest one-time movement/);
-  const left=html.match(/<aside class="game-stats"[^>]*>([\s\S]*?)<\/aside>/)[1];
-  assert.ok(left.indexOf('Threat watch')<left.indexOf('Funding desk'));
-  assert.doesNotMatch(left,/Weekly budget|Calendar/);
-  const right=html.match(/<aside class="game-sidebar"[^>]*>([\s\S]*?)<\/aside>/)[1];
-  assert.ok(right.indexOf('Local programs')<right.indexOf('Bring the population back'));
+  assert.doesNotMatch(html,/data-cashflow|class="game-stats"|class="game-sidebar"|data-tool=/);
+  assert.equal((html.match(/data-route-action=/g)||[]).length,5);
+  assert.equal((html.match(/data-fundraiser=/g)||[]).length,5);
+  assert.equal((html.match(/data-service=/g)||[]).length,5);
+  assert.match(html,/data-command-rail="funding"/);assert.match(html,/data-command-rail="programs"/);
+  for(const panel of ['threat','season','wildlife','goals','events','advice','map']){
+    assert.match(html,new RegExp(`data-status-toggle="${panel}"`));
+    assert.match(html,new RegExp(`data-status-panel="${panel}"`));
+  }
+  assert.match(styles,/\.map-command-rail\.expanded/);assert.match(styles,/\.status-drawer\[hidden\]/);
+  assert.match(styles,/\.selection-panel\s*\{[^}]*position:absolute/);
   const map=html.indexOf('id="game-map"'),controls=html.indexOf('class="hud-controls"'),mission=html.indexOf('class="mission-strip"'),tutorial=html.indexOf('class="tutorial-panel"');
   assert.ok(map<controls&&controls<mission&&mission<tutorial);
   assert.match(html,/data-leaderboard-scope/);assert.match(html,/data-interest-form/);
